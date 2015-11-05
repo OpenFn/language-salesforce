@@ -4,11 +4,15 @@
   "description": "Salesforce Language Pack for OpenFn",
   "main": "index.js",
   "scripts": {
-    "test": "lispy test/test.ls && node test/test.js"
+    "test": "mocha --compilers js:babel/register"
   },
   "author": "Stuart Corbishley",
   "license": "ISC",
   "dependencies": {
     "lispyscript": "git+https://github.com/santoshrajan/lispyscript.git"
+  },
+  "devDependencies": {
+    "babel": "^5.8.29",
+    "mocha": "^2.3.3"
   }
 }
