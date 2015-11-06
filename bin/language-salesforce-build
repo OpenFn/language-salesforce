@@ -1,0 +1,34 @@
+#!/usr/bin/env node
+
+var Mustache = require('mustache'),
+    sweet = require('sweet.js'),
+    fs = require('fs'),
+    path = require('path');
+
+sweet.loadMacro('./macros/salesforce');
+
+var templatePath = path.
+  join(path.dirname(fs.realpathSync(__filename)), "../templates");
+
+var template = fs.readFileSync(templatePath + "/example.hbs.js", 'utf8');
+
+var stdin = "";
+process.stdin.setEncoding('utf8');
+process.stdin.on('readable', function() {
+  var chunk = process.stdin.read();
+  if (chunk !== null) {
+    stdin += chunk;
+  }
+});
+
+process.stdin.on('end', function() {
+
+  var locals = {
+    expression: sweet.compile(stdin, {readableNames: true}).code
+  };
+
+  var output = Mustache.render(template, locals);
+
+  process.stdout.write(output);
+  process.exit(0);
+});
