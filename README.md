@@ -8,7 +8,7 @@ Intent
 
 Allow communication with Salesforce using a set of Lisp compatible expressions.
 
-Using macros we can create a simplified API, simple enough to generate
+Using simple functions we can create a simplified API, simple enough to generate
 code from data.
 
 Expressions
@@ -20,16 +20,23 @@ needed to be performed.
 An uncompiled expression has no knowledge of the internals of the adaptor,
 credentials or runtime environment.
 
-It's the responsibility of the build process to expand an expression into
-something bigger, and is aware of it's own API.
+It's the responsibility of the build process to provide a wrapper that will
+inject the functions in.
 
 For example:
 
 ```javascript
-salesforce(
-  upsert("obj","exid",
-    field(a,1)
-  )
+steps(
+  describe('vera__Test_Event__c'),
+
+  create('vera__Test_Event__c', {
+    vera__Test_Event_Name_Unique__c: "hello from jsforce"
+  }),
+
+  create('vera__Boat__c', {
+    Name: "Catatafish redux!",
+    vera__Test_Event__c: reference(0)
+  })
 )
 ```
 
@@ -39,16 +46,33 @@ dependencies - such as external libraries, configuration etc.
 When compiled, an expression may look something like this:
 
 ```js
-import FakeAdaptor from './test/FakeAdaptor';
-const expression = (function (adaptor, credentials) {
+import { execute, describe, create, upsert, reference, steps } from './src/adaptor';
 
-  return adaptor.execute([function (conn) {
-    return conn.sobject('obj').upsert({ a: 1 }, 'exid');
-  }]);
+execute({
+  connectionOptions: {
+    accessToken: "xxxx"
+  },
 
-});
+  credentials: {
+    username: 'foo',
+    password: 'bar',
+    securityToken: "baz"
+  }
+},
+  steps(
+  describe('vera__Test_Event__c'),
 
-expression(FakeAdaptor, {username: "username", ...});
+  create('vera__Test_Event__c', {
+    vera__Test_Event_Name_Unique__c: "hello from jsforce"
+  }),
+
+  create('vera__Boat__c', {
+    Name: "Catatafish redux!",
+    vera__Test_Event__c: reference(0)
+  })
+)
+
+);
 ```
 
 By using this convention we can maintain a very clean separation of concerns.
@@ -71,19 +95,20 @@ Executing a build
 
 
 
-Macros
-------
-
-*See [macros](macros/salesforce.sjs)*
+API
+---
 
 `field("key","value")`  
 Returns `{ "key": "value" }`
 
-`upsert(sObject, externalID, fields ...)`  
-Returns `function(connection) -> Promise`
+`create(sObject, fields ...)`  
+Returns `function(state) -> Promise`
 
-`salesforce( operations ... )`  
-Returns `function(adaptor,credentials)`
+`upsert(sObject, externalID, fields ...)`  
+Returns `function(state) -> Promise`
+
+`steps( operations ... )`  
+Returns `Array<Operation>`
 
 Execution
 ---------
