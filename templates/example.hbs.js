@@ -1,4 +1,15 @@
-import FakeAdaptor from './test/FakeAdaptor';
-const expression = {{{expression}}};
+import { execute, describe, create, upsert, reference, steps } from './src/adaptor';
 
-expression(FakeAdaptor, {username: "username", password: "password"})
+execute({
+  connectionOptions: {
+    accessToken: ""
+  },
+
+  credentials: {
+    username: '',
+    password: '',
+    securityToken: ""
+  }
+},
+  {{{expression}}}
+);

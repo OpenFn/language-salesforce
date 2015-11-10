@@ -1,5 +1,6 @@
 /* @flow */
 import jsforce from 'jsforce';
+import lodash from 'lodash-fp';
 
 type State = {
   references: Array<Object>;
@@ -7,6 +8,8 @@ type State = {
 };
 
 type SObject = string;
+
+type Operation = Function;
 
 type Credentials = {
   username: string;
@@ -18,6 +21,10 @@ type ConnectionOptions = {
   accessToken: string;
 };
 
+type Configuration = {
+  credentials: Credentials;
+  connectionOptions: ConnectionOptions;
+}
 
 function describe(sObject: SObject): Function {
   return function(state: State) {
@@ -72,35 +79,69 @@ function upsert(sObject: SObject, externalId: string, attrs): Function {
         console.error(err);
         return err;
       });
-
   }
 };
 
-function execute(credentials: Credentials, connectionOptions: ConnectionOptions) {
+function reference(position: number): Function {
+  return function({references}) {
+    return references[position].id
+  };
+}
+
+function login({username, password, securityToken}: Credentials): Function {
+  return function(state: State): Operation {
+    let { connection } = state;
+    console.info(`Logging in as ${username}.`);
+
+    return connection.login( username, password + securityToken );
+
+  };
+}
+
+
+function execute(
+  {credentials, connectionOptions}: Configuration,
+  operations: Array<Operation>
+) {
 
   const state: State = {
     connection: new jsforce.Connection(connectionOptions), 
     references: []
   }
 
-  state.connection.login(
-    credentials.username, 
-    credentials.password + credentials.securityToken
-  )
-  .then(showUserInfo)
-  .then(injectState(state))
+  const start = login(credentials)(state).then(injectState(state));
+
+  operations.reduce((acc, operation) => {
+    return acc.then(operation);
+  }, start)
+  .then(function(state) {
+    console.info("Finished Successfully");
+  })
   .catch(function(err) {
     console.error(err);
     console.log(err.stack);
+    console.info("Job failed.");
+    process.exit(1);
   });
   
 }
 
+// Wrappers
+function steps(...operations): Array<Operation> {
+  return(operations);
+}
+
 // Utils
-function injectState(state: State): function {
+function injectState(state: State): Function {
   return function() {
     return state;
   };
 }
 
-export { execute, describe, create, upsert, injectState }
+function expandReferences(state: State, attrs) {
+  return lodash.mapValues(function(value) {
+    return typeof value == 'function' ? value(state) : value;
+  })(attrs); 
+}
+
+export { execute, describe, create, upsert, reference, steps }

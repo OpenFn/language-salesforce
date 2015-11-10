@@ -1,11 +1,8 @@
 #!/usr/bin/env node
 
 var Mustache = require('mustache'),
-    sweet = require('sweet.js'),
     fs = require('fs'),
     path = require('path');
-
-sweet.loadMacro('./macros/salesforce');
 
 var templatePath = path.
   join(path.dirname(fs.realpathSync(__filename)), "../templates");
@@ -24,7 +21,7 @@ process.stdin.on('readable', function() {
 process.stdin.on('end', function() {
 
   var locals = {
-    expression: sweet.compile(stdin, {readableNames: true}).code
+    expression: stdin
   };
 
   var output = Mustache.render(template, locals);
