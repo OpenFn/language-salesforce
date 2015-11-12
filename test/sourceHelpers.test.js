@@ -22,7 +22,6 @@ describe("Source Helpers", () => {
 
     const state = {data: testData};
 
-
     it("can produce a one to one from an array", () => {
       let obj = map('$.store.book[*]', 
         function(state) {

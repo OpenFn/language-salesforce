@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { create, source, sourceValue, steps, map } from './FakeAdaptor';
+import { execute, create, source, sourceValue, steps, map } from './FakeAdaptor';
 import testData from './testData';
 
 describe("JSON References", () => {
@@ -13,50 +13,60 @@ describe("JSON References", () => {
 
   describe("Use cases", () => {
 
-    const state = {data: testData};
-
     it("can produce a one to one", () => {
-      let obj = create("myObject", {
+      const state = {data: testData, references: []};
+
+      create("myObject", {
         bicycle: sourceValue("$.store.bicycle.color", state)
       }, state)
 
-      expect(obj).to.eql({ sObject: "myObject", fields: { bicycle: "red" } })
+      expect(state.references).to.eql([ { sObject: "myObject", fields: { bicycle: "red" } } ])
     });
 
-    it("can produce a one to one from an array", () => {
-      let obj = map('$.store.book[*]', 
-        create('Book', {
-          title: sourceValue("$.title")
-        })
-        , state)
+    it("can create an object", function(done) {
+      const state = {data: testData, references: []};
 
-      expect(obj).to.eql([
-        {
-          "fields": {
-            "title": "Sayings of the Century"
-          },
-          "sObject": "Book"
-        },
-        {
-          "fields": {
-            "title": "Sword of Honour"
-          },
-          "sObject": "Book"
-        },
-        {
-          "fields": {
-            "title": "Moby Dick"
-          },
-          "sObject": "Book"
-        },
-        {
-          "fields": {
-            "title": "The Lord of the Rings"
-          },
-          "sObject": "Book"
-        }
-      ])
-      
+      execute(state, steps(
+        create('Bicycle', {
+          color: sourceValue("$.store.bicycle.color")
+        })
+      ))
+      .then(function({references}) {
+        expect(references).to.eql([
+          {
+            "fields": {
+              "color": "red"
+            },
+            "sObject": "Bicycle"
+          }
+        ]);
+      }).catch(function(err) {
+        return err;
+      }).then(done)
+
+    });
+
+    it("can create many objects", function(done) {
+      const state = {data: testData, references: []};
+
+      execute(state, steps(
+        map("$.store.book[*]",
+            create("Book", {
+              title: sourceValue("$.title")
+            })
+           )
+      ))
+      .then(function({references}) {
+        expect(references).to.eql(
+          [ { sObject: 'Book', fields: { title: 'Sayings of the Century' } },
+            { sObject: 'Book', fields: { title: 'Sword of Honour' } },
+            { sObject: 'Book', fields: { title: 'Moby Dick' } },
+            { sObject: 'Book', fields: { title: 'The Lord of the Rings' } } ]
+        );
+      }).catch(function(err) {
+        return err;
+      }).then(done)
+
     });
   })
   

@@ -97,12 +97,14 @@ function login({username, password, securityToken}: Credentials): Function {
 
 function execute(
   {credentials, connectionOptions}: Configuration,
+  data = {},
   operations: Array<Operation>
 ) {
 
   const state: State = {
     connection: new jsforce.Connection(connectionOptions), 
-    references: []
+    references: [],
+    data
   }
 
   const start = login(credentials)(state).then(injectState(state));
@@ -111,6 +113,7 @@ function execute(
     return acc.then(operation);
   }, start)
   .then(function(state) {
+    console.log(state);
     console.info("Finished Successfully");
   })
   .catch(function(err) {
@@ -140,4 +143,7 @@ function expandReferences(state: State, attrs) {
   })(attrs); 
 }
 
-export { execute, describe, create, upsert, reference, steps }
+export {
+  execute, describe, create, upsert,
+  reference, steps, source, sourceValue, map
+}

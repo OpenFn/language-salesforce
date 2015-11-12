@@ -38,9 +38,10 @@ const source = curry(function(path, {data}) {
  * @returns {Array.<Operation>}
  */
 const map = curry(function(path, operation, state) {
-  return source(path,state).map(function(data) {
-    return operation(merge({ data }, state));
-  })
+  source(path,state).map(function(data) {
+    return operation(merge({data}, state));
+  });
+  return state;
 });
 
 export { source, sourceValue, map }
