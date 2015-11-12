@@ -2,14 +2,6 @@ import { expect } from 'chai';
 import { create, source, sourceValue, steps, map } from './FakeAdaptor';
 import testData from './testData';
 
-steps(
-  map('$.store.book', 
-    create('Book', 'sp_id__c', {
-      title: source("$.title")
-    })
-  )
-)
-
 describe("JSON References", () => {
 
   describe("One to one", () => {

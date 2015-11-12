@@ -1,36 +1,22 @@
-import { curry, merge, mapValues } from 'lodash-fp';
-import JSONPath from 'JSONPath';
+import { curry, mapValues } from 'lodash-fp';
+import { source, sourceValue, map } from '../src/sourceHelpers';
 
 function steps(...operations) {
   return operations;
 }
 
-function expandReferences(state, attrs) {
+function expandReferences(attrs, state) {
   return mapValues(function(value) {
     return typeof value == 'function' ? value(state) : value;
   })(attrs); 
 }
 
 const create = curry(function(sObject, fields, state) {
-  return { sObject, fields: expandReferences(state, fields) };
+  return { sObject, fields: expandReferences(fields, state) };
 });
 
 function reference(pos) {
   return pos;
 }
-
-const sourceValue = curry(function(path, {data}) {
-  return JSONPath.eval(data, path)[0];
-})
-
-const source = curry(function(path, {data}) {
-  return JSONPath.eval(data, path);
-})
-
-const map = curry(function(path, operation, state) {
-  return source(path,state).map(function(data) {
-    return operation(merge({ data }, state));
-  })
-})
 
 export { create, reference, steps, source, sourceValue, map }

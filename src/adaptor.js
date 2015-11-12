@@ -1,6 +1,7 @@
 /* @flow */
 import jsforce from 'jsforce';
-import lodash from 'lodash-fp';
+import { source, sourceValue, map } from './sourceHelpers';
+import { curry, mapValues } from 'lodash-fp';
 
 type State = {
   references: Array<Object>;
@@ -26,67 +27,62 @@ type Configuration = {
   connectionOptions: ConnectionOptions;
 }
 
-function describe(sObject: SObject): Function {
-  return function(state: State) {
-    let {connection, references} = state;
+const describe = curry(function(sObject, state) {
+  let {connection} = state;
 
-    return connection.sobject(sObject).describe()
-      .then(function(meta): State {
-        console.log('Label : ' + meta.label);
-        console.log('Num of Fields : ' + meta.fields.length);
+  return connection.sobject(sObject).describe()
+  .then(function(meta): State {
+    console.log('Label : ' + meta.label);
+    console.log('Num of Fields : ' + meta.fields.length);
 
-        return state;
-      })
-      .catch(function(err) {
-        console.error(err);
-        return err;
-      })
-  }
-};
+    return state;
+  })
+  .catch(function(err) {
+    console.error(err);
+    return err;
+  })
+  
+});
 
-function create(sObject: SObject, attrs): Function {
-  return function(state: State) {
-    let {connection, references} = state;
-    console.info(`Creating ${sObject}`, attrs);
+const create = curry(function(sObject, attrs, state) {
+  let {connection, references} = state;
+  console.info(`Creating ${sObject}`, attrs);
 
-    return connection.create(sObject, expandReferences(state, attrs))
-      .then(function(recordResult): State {
-        references.push(recordResult);
-        console.log('Result : ' + JSON.stringify(recordResult));
+  return connection.create(sObject, expandReferences(state, attrs))
+  .then(function(recordResult): State {
+    references.push(recordResult);
+    console.log('Result : ' + JSON.stringify(recordResult));
 
-        return state;
-      })
-      .catch(function(err) {
-        console.error(err);
-        return err;
-      })
-  }
-};
+    return state;
+  })
+  .catch(function(err) {
+    console.error(err.stack);
+    return err;
+  })
+  
+});
 
-function upsert(sObject: SObject, externalId: string, attrs): Function {
-  return function(state: State) {
-    let {connection, references} = state;
-    console.info(`Upserting ${sObject} with externalId`, externalId, ":" , attrs);
+const upsert = curry(function(sObject, externalId, attrs, state) {
+  let {connection, references} = state;
+  console.info(`Upserting ${sObject} with externalId`, externalId, ":" , attrs);
 
-    return connection.upsert(sObject, externalId, expandReferences(state, attrs))
-      .then(function(recordResult): State {
-        references.push(recordResult);
-        console.log('Result : ' + JSON.stringify(recordResult));
+  return connection.upsert(sObject, externalId, expandReferences(state, attrs))
+  .then(function(recordResult): State {
+    references.push(recordResult);
+    console.log('Result : ' + JSON.stringify(recordResult));
 
-        return state;
-      })
-      .catch(function(err) {
-        console.error(err);
-        return err;
-      });
-  }
-};
+    return state;
+  })
+  .catch(function(err) {
+    console.error(err);
+    return err;
+  });
 
-function reference(position: number): Function {
-  return function({references}) {
-    return references[position].id
-  };
-}
+})
+
+const reference = curry(function(position, {references}) {
+  return references[position].id;
+})
 
 function login({username, password, securityToken}: Credentials): Function {
   return function(state: State): Operation {
@@ -139,7 +135,7 @@ function injectState(state: State): Function {
 }
 
 function expandReferences(state: State, attrs) {
-  return lodash.mapValues(function(value) {
+  return mapValues(function(value) {
     return typeof value == 'function' ? value(state) : value;
   })(attrs); 
 }
