@@ -102,26 +102,21 @@ API
 Returns `{ "key": "value" }`
 
 `create(sObject, fields ...)`  
-Returns `function(state) -> Promise`
+Returns `state`
 
 `upsert(sObject, externalID, fields ...)`  
-Returns `function(state) -> Promise`
+Returns `state`
 
 `steps( operations ... )`  
 Returns `Array<Operation>`
 
-Execution
----------
+`map(<JSONPath>, <Operation>, state)`
+Wraps an operation around an iterable.
+Each operation receives a scoped version of the data for each of items
+found at the given path.
 
-**TBD**
+Returns `state`
 
-Basic outline is:
-
-1. Compile Expression  
-   Assumes bindings to API calls to Salesforce.
-2. Evaluate  
-   Using a wrapper which will provide logging, exception handling and
-   runtime variables (credentials etc).
 
 Development
 -----------

@@ -23,12 +23,13 @@ describe("Source Helpers", () => {
     const state = {data: testData};
 
     it("can produce a one to one from an array", () => {
-      let obj = map('$.store.book[*]', 
-        function(state) {
-          return { title: sourceValue("$.title", state) } 
-        }, state)
+      let items = [];
+      map('$.store.book[*]', 
+          function(state) {
+            items.push( { title: sourceValue("$.title", state) } )
+          }, state)
 
-      expect(obj).to.eql([
+      expect(items).to.eql([
         { "title": "Sayings of the Century" },
         { "title": "Sword of Honour" },
         { "title": "Moby Dick" },

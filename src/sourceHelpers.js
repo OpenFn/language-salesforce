@@ -7,7 +7,7 @@ import JSONPath from 'JSONPath';
  * item will be returned.
  * @constructor
  * @param {String} path - JSONPath referencing a point in `state.data`.
- * @param {Object} state - Runtime state.
+ * @param {State} state - Runtime state.
  * @returns {String}
  */
 const sourceValue = curry(function(path, {data}) {
@@ -20,7 +20,7 @@ const sourceValue = curry(function(path, {data}) {
  * If you need a single value use `sourceValue` instead.
  * @constructor
  * @param {string} path - JSONPath referencing a point in `state.data`.
- * @param {object} state - Runtime state.
+ * @param {State} state - Runtime state.
  * @returns {Array.<String|Object>}
  */
 const source = curry(function(path, {data}) {
@@ -34,8 +34,8 @@ const source = curry(function(path, {data}) {
  * @constructor
  * @param {string} path - JSONPath referencing a point in `state.data`.
  * @param {function} operation - The operation needed to be repeated.
- * @param {object} state - Runtime state.
- * @returns {Array.<Operation>}
+ * @param {State} state - Runtime state.
+ * @returns {<State>}
  */
 const map = curry(function(path, operation, state) {
   source(path,state).map(function(data) {
