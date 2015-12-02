@@ -2,18 +2,23 @@
   "name": "language-salesforce",
   "version": "0.0.3",
   "description": "Salesforce Language Pack for OpenFn",
-  "main": "index.js",
+  "main": "lib/index.js",
   "scripts": {
     "watch": "mocha -w --compilers js:babel-core/register",
+    "build": "make",
     "test": "mocha --compilers js:babel-core/register"
   },
   "author": "Stuart Corbishley",
   "license": "GNU GPL",
+  "files": [
+    "lib/"
+  ],
   "dependencies": {
     "JSONPath": "^0.10.0",
     "jsforce": "^1.5.0",
     "lodash-fp": "^0.10.2",
-    "mustache": "^2.2.0"
+    "mustache": "^2.2.0",
+    "yargs": "^3.30.0"
   },
   "devDependencies": {
     "assertion-error": "^1.0.1",
