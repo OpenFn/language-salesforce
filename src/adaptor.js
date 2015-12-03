@@ -47,9 +47,10 @@ const describe = curry(function(sObject, state) {
  */
 const create = curry(function(sObject, attrs, state) {
   let {connection, references} = state;
-  console.info(`Creating ${sObject}`, attrs);
+  const finalAttrs = expandReferences(state, attrs)
+  console.info(`Creating ${sObject}`, finalAttrs);
 
-  return connection.create(sObject, expandReferences(state, attrs))
+  return connection.create(sObject, finalAttrs)
   .then(function(recordResult) {
     references.push(recordResult);
     console.log('Result : ' + JSON.stringify(recordResult));
@@ -65,9 +66,10 @@ const create = curry(function(sObject, attrs, state) {
 
 const upsert = curry(function(sObject, externalId, attrs, state) {
   let {connection, references} = state;
-  console.info(`Upserting ${sObject} with externalId`, externalId, ":" , attrs);
+  const finalAttrs = expandReferences(state, attrs)
+  console.info(`Upserting ${sObject} with externalId`, externalId, ":" , finalAttrs);
 
-  return connection.upsert(sObject, externalId, expandReferences(state, attrs))
+  return connection.upsert(sObject, externalId, finalAttrs)
   .then(function(recordResult) {
     references.push(recordResult);
     console.log('Result : ' + JSON.stringify(recordResult));
