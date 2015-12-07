@@ -1,5 +1,5 @@
 import { curry, mapValues, flatten } from 'lodash-fp';
-import { source, sourceValue, map } from '../src/sourceHelpers';
+import { source, sourceValue, map } from './sourceHelpers';
 
 function steps(...operations) {
   return flatten(operations);
