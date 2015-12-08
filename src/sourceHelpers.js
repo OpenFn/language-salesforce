@@ -111,7 +111,13 @@ function asData(data, state) {
 export function each(path, operation) {
   return (state) => {
     return asData(path,state).reduce(function(state, data) {
-      return operation({ ...state, data })
+      if (state.then) {
+        return state.then((state) => {
+          return operation({ ...state, data })
+        })
+      } else {
+        return operation({ ...state, data })
+      }
     }, state)
 
   }

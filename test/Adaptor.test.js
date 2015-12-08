@@ -1,7 +1,10 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
-import Adaptor from '../src/adaptor';
-const { adaptorDescribe: adaptor, reference, create, upsert } = Adaptor
+import { reference, create, upsert, steps, each,
+  field, fields, sourceValue } from '../src/adaptor';
+import { execute } from '../src/FakeAdaptor';
+import testData from './testData';
+
 describe("Adaptor", () => {
 
   describe("reference", () => {
@@ -12,12 +15,9 @@ describe("Adaptor", () => {
     })
   })
 
-  describe("describe", () => {
-  })
-
   describe("create", () => {
 
-    it("makes a new sObject", () => {
+    it("makes a new sObject", (done) => {
 
       const fakeConnection = {
         create: function() {
@@ -31,15 +31,17 @@ describe("Adaptor", () => {
 
       let spy = sinon.spy(fakeConnection, "create");
 
-      create(sObject, fields, state);
-      expect(spy.args[0]).to.eql([ sObject, fields ]);
-      expect(spy.called).to.eql(true);
+      create(sObject, fields, state).then((state) => {
+        expect(spy.args[0]).to.eql([ sObject, fields ]);
+        expect(spy.called).to.eql(true);
+        expect(state.references[0]).to.eql({Id: 10})
+      }).then(done).catch(done)
     })
   })
 
   describe("upsert", () => {
 
-    it("is expected to call `upsert` on the connection", () => {
+    it("is expected to call `upsert` on the connection", (done) => {
 
       const connection = {
         upsert: function() {
@@ -54,9 +56,63 @@ describe("Adaptor", () => {
 
       let spy = sinon.spy(connection, "upsert");
 
-      upsert(sObject, externalId, fields, state);
-      expect(spy.args[0]).to.eql([ sObject, externalId, fields ]);
-      expect(spy.called).to.eql(true);
+      upsert(sObject, externalId, fields, state).then((state) => {
+        expect(spy.args[0]).to.eql([ sObject, externalId, fields ])
+        expect(spy.called).to.eql(true)
+        expect(state.references[0]).to.eql({Id: 10})
+      }).then(done).catch(done)
+    })
+  })
+
+
+  describe("nesting", () => {
+
+    let initialState
+    let afterExecutionOf
+
+    function executionWrapper(initialState) {
+      return (operations) => {
+        return execute(initialState, operations)
+      }
+    }
+
+    let counter = 0
+    const fakeConnection = {
+      create: function(sObject, attrs) {
+        return Promise.resolve({sObject, fields: attrs, Id: counter+=1})  
+      }
+    };
+
+    beforeEach(() => {
+      initialState = { connection: fakeConnection, data: testData, references: []};
+      afterExecutionOf = executionWrapper(initialState)
+    })
+
+    it("works", (done) => {
+      let operations = (
+        steps(
+          each(
+            "$.data.store.book[*]",
+            create(
+              "Book",
+              fields(
+                field(
+                  "title",
+                  sourceValue("$.data.title")
+                )
+              )
+            )
+          )
+        )
+      )
+
+    afterExecutionOf(operations).then((state) => {
+      console.log(state);
+      let references = state.references.reverse()
+
+      expect(references.length).to.eql(4)
+      expect(references[0].fields.title).to.eql("Sayings of the Century")
+    }).then(done).catch(done)
     })
   })
 

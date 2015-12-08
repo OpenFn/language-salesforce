@@ -1,6 +1,5 @@
 import jsforce from 'jsforce';
-import { source, sourceValue, map } from './sourceHelpers';
-import { curry, mapValues } from 'lodash-fp';
+import { curry, mapValues, flatten } from 'lodash-fp';
 
 /**
  * @typedef {Object} State
@@ -52,10 +51,10 @@ const create = curry(function(sObject, attrs, state) {
 
   return connection.create(sObject, finalAttrs)
   .then(function(recordResult) {
-    references.push(recordResult);
     console.log('Result : ' + JSON.stringify(recordResult));
-
-    return state;
+    return {
+      ...state, references: [recordResult, ...state.references]
+    }
   })
   .catch(function(err) {
     console.error(err.stack);
@@ -71,10 +70,10 @@ const upsert = curry(function(sObject, externalId, attrs, state) {
 
   return connection.upsert(sObject, externalId, finalAttrs)
   .then(function(recordResult) {
-    references.push(recordResult);
     console.log('Result : ' + JSON.stringify(recordResult));
-
-    return state;
+    return {
+      ...state, references: [recordResult, ...state.references]
+    }
   })
   .catch(function(err) {
     console.error(err);
@@ -112,12 +111,13 @@ function execute(
 
   const start = login(credentials)(state).then(injectState(state));
 
-  operations.reduce((acc, operation) => {
+  return operations.reduce((acc, operation) => {
     return acc.then(operation);
   }, start)
   .then(function(state) {
     console.log(state);
     console.info("Finished Successfully");
+    return state
   })
   .catch(function(err) {
     console.error(err);
@@ -128,16 +128,15 @@ function execute(
   
 }
 
-// Wrappers
-function steps(...operations) {
-  return(operations);
-}
-
 // Utils
 function injectState(state) {
   return function() {
     return state;
   };
+}
+
+function steps(...operations) {
+  return flatten(operations);
 }
 
 function expandReferences(state, attrs) {
@@ -146,7 +145,11 @@ function expandReferences(state, attrs) {
   })(attrs); 
 }
 
-export default {
+export {
   execute, describe, create, upsert,
-  reference, steps, source, sourceValue, map
+  reference, steps
 }
+
+export {
+  each, field, fields, join, source, sourceValue, map, combine
+} from './sourceHelpers';

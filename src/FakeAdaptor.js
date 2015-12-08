@@ -57,4 +57,6 @@ export {
   steps
 }
 
-export { each, field, fields, join, source, sourceValue, map, combine } from './sourceHelpers';
+export {
+  each, field, fields, join, source, sourceValue, map, combine
+} from './sourceHelpers';

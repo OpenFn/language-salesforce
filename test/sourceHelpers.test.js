@@ -48,6 +48,22 @@ describe("Source Helpers", () => {
       expect(results.references.reverse()).to.eql(testData.store.book)
     })
 
+    it("resolves promise operations", (done) => {
+      let sourcingFunction = (state) => {
+        return state.data.store.book
+      }
+
+      operation = ({data, references}) => {
+        return Promise.resolve({
+          data, references: [data, ...references]
+        })
+      }
+
+      each( sourcingFunction , operation )(state).then((state) => {
+        expect(state.references.reverse()).to.eql(testData.store.book)
+      }).then(done).catch(done)
+    })
+
   })
 
   describe("map", () => {
