@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
-import { describe as adaptorDescribe, reference, create, upsert } from '../src/adaptor';
-
+import Adaptor from '../src/adaptor';
+const { adaptorDescribe: adaptor, reference, create, upsert } = Adaptor
 describe("Adaptor", () => {
 
   describe("reference", () => {

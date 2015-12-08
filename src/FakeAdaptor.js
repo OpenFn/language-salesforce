@@ -1,5 +1,4 @@
 import { curry, mapValues, flatten } from 'lodash-fp';
-import { source, sourceValue, map } from './sourceHelpers';
 
 function steps(...operations) {
   return flatten(operations);
@@ -11,15 +10,24 @@ function expandReferences(attrs, state) {
   })(attrs); 
 }
 
-const create = curry(function(sObject, fields, state) {
-  let { references } = state;
-  references.push( { sObject, fields: expandReferences(fields, state) } );
-  return state;
-});
+function create(sObject, fields) {
 
-function reference(pos) {
-  return pos;
+  return (state) => {
+    let id = state.references.length + 1
+    let result = {sObject, fields: expandReferences(fields, state), id}
+
+    return {
+      ...state,
+      references: [result, ...state.references] 
+    }
+
+  }
 }
+
+const reference = curry(function(position, {references}) {
+  return references[position].id;
+})
+
 // Utils
 function injectState(state) {
   return function() {
@@ -37,9 +45,16 @@ function execute( state = {}, operations) {
   .catch(function(err) {
     console.error(err.stack);
     console.info("Job failed.");
-  });
+  })
   
 }
 
 
-export { execute, create, reference, steps, source, sourceValue, map }
+export {
+  create,
+  execute,
+  reference,
+  steps
+}
+
+export { each, field, fields, join, source, sourceValue, map, combine } from './sourceHelpers';

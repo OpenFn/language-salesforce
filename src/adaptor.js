@@ -146,7 +146,7 @@ function expandReferences(state, attrs) {
   })(attrs); 
 }
 
-export {
+export default {
   execute, describe, create, upsert,
   reference, steps, source, sourceValue, map
 }

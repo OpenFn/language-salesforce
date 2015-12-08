@@ -1,12 +1,12 @@
 import { expect } from 'chai';
-import { execute, create, source, sourceValue, steps, map } from './FakeAdaptor';
+import { each, execute, create, source, sourceValue, steps, map } from '../src/FakeAdaptor'
 import testData from './testData';
 
 describe("JSON References", () => {
 
   describe("One to one", () => {
     it("references a given path", () => {
-      let value = sourceValue("$.store.bicycle.color", {data: testData});
+      let value = sourceValue("$.data.store.bicycle.color", {data: testData});
       expect(value).to.eql("red");
     })
   })
@@ -16,11 +16,13 @@ describe("JSON References", () => {
     it("can produce a one to one", () => {
       const state = {data: testData, references: []};
 
-      create("myObject", {
-        bicycle: sourceValue("$.store.bicycle.color", state)
-      }, state)
+      let result = create("myObject", {
+        bicycle: sourceValue("$.data.store.bicycle.color")
+      })(state)
 
-      expect(state.references).to.eql([ { sObject: "myObject", fields: { bicycle: "red" } } ])
+      expect(result.references).to.eql([ {
+        sObject: "myObject", id: 1, fields: { bicycle: "red" }
+      } ])
     });
 
     it("can create an object", function(done) {
@@ -28,7 +30,7 @@ describe("JSON References", () => {
 
       execute(state, steps(
         create('Bicycle', {
-          color: sourceValue("$.store.bicycle.color")
+          color: sourceValue("$.data.store.bicycle.color")
         })
       ))
       .then(function({references}) {
@@ -37,6 +39,7 @@ describe("JSON References", () => {
             "fields": {
               "color": "red"
             },
+            id: 1,
             "sObject": "Bicycle"
           }
         ]);
@@ -50,18 +53,18 @@ describe("JSON References", () => {
       const state = {data: testData, references: []};
 
       execute(state, steps(
-        map("$.store.book[*]",
+        each("$.data.store.book[*]",
             create("Book", {
-              title: sourceValue("$.title")
+              title: sourceValue("$.data.title")
             })
-           )
+           ),
       ))
       .then(function({references}) {
-        expect(references).to.eql(
-          [ { sObject: 'Book', fields: { title: 'Sayings of the Century' } },
-            { sObject: 'Book', fields: { title: 'Sword of Honour' } },
-            { sObject: 'Book', fields: { title: 'Moby Dick' } },
-            { sObject: 'Book', fields: { title: 'The Lord of the Rings' } } ]
+        expect(references.reverse()).to.eql(
+          [ { sObject: 'Book', id: 1, fields: { title: 'Sayings of the Century' } },
+            { sObject: 'Book', id: 2, fields: { title: 'Sword of Honour' } },
+            { sObject: 'Book', id: 3, fields: { title: 'Moby Dick' } },
+            { sObject: 'Book', id: 4, fields: { title: 'The Lord of the Rings' } } ]
         );
       }).catch(function(err) {
         return err;

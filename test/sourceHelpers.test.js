@@ -1,35 +1,70 @@
 import { expect } from 'chai';
-import { source, sourceValue, map } from '../src/sourceHelpers';
+import { each, field, fields, join, source, sourceValue, map, combine } from '../src/sourceHelpers';
 import testData from './testData';
 
 describe("Source Helpers", () => {
 
   describe("sourceValue", () => {
     it("references a given path", () => {
-      let value = sourceValue("$.store.bicycle.color", {data: testData});
+      let value = sourceValue("$.store.bicycle.color", testData);
       expect(value).to.eql("red");
     })
   })
 
   describe("source", () => {
     it("references a given path", () => {
-      let value = source("$.store.bicycle.color", {data: testData});
+      let value = source("$.store.bicycle.color")(testData);
       expect(value).to.eql([ "red" ]);
     })
   })
 
+  describe("each", () => {
+
+    let state
+    let operation = ({data, references}) => { return {
+      data, references: [data, ...references]
+    } }
+
+    beforeEach(function() {
+      state = { data: testData, references: [] }
+    })
+
+    it("maps the operation results in the references", () => {
+      let results = each( "$.data.store.book[*]", operation )(state)
+      expect(results.references.reverse()).to.eql(testData.store.book)
+    })
+
+    it("maps the operation results in the data", () => {
+      let results = each( testData.store.book, operation )(state)
+      expect(results.references.reverse()).to.eql(testData.store.book)
+    })
+
+    it("calls the data sourcing function", () => {
+      let sourcingFunction = (state) => {
+        return state.data.store.book
+      }
+
+      let results = each( sourcingFunction , operation )(state)
+      expect(results.references.reverse()).to.eql(testData.store.book)
+    })
+
+  })
+
   describe("map", () => {
 
-    const state = {data: testData};
-
-    it("can produce a one to one from an array", () => {
+    xit("[DEPRECATED] can produce a one to one from an array", () => {
       let items = [];
-      map('$.store.book[*]', 
+
+      let state = { data: testData, references: [] }
+      let results = map('$.data.store.book[*]', 
           function(state) {
-            items.push( { title: sourceValue("$.title", state) } )
+            console.log("hello");
+            // console.log(JSON.stringify( state ));
+            // items.push( { title: sourceValue("$.data.title", state) } )
+            return { references: [1, ...state.references], ...state }
           }, state)
 
-      expect(items).to.eql([
+      expect(results.references).to.eql([
         { "title": "Sayings of the Century" },
         { "title": "Sword of Honour" },
         { "title": "Moby Dick" },
@@ -37,6 +72,53 @@ describe("Source Helpers", () => {
       ])
       
     });
+
+  })
+
+  describe("combine", () => {
+
+    let state = { }
+    let operations = [
+      (state) => { return { hello: 1 } },
+      (state) => { return { hello: state.hello + 5 } }
+    ]
+
+
+    it("accepts serveral operations, and reduces them with the state", () => {
+      let result = combine.apply(null,operations)(state)
+      expect(result).to.eql({ hello: 6 })
+    })
+
+  })
+
+  describe("join", () => {
+    it("merges in a previously defined field", () => {
+      let result = join(
+        "$.store.book[*]",
+        "$.store.bicycle.color",
+        "color"
+      )(testData)
+
+      expect(result[0]).to.eql( {
+          "author": "Nigel Rees",
+          "category": "reference",
+          "color": "red",
+          "price": 8.95,
+          "title": "Sayings of the Century"
+        })
+    })
+  })
+
+  describe("fields", () => {
+    it("combines serveral fields into objects", () => {
+      let result = fields(
+        field("a", 1),
+        field("b", 2)
+      )
+
+      expect(result).to.eql({ a: 1, b: 2 })
+      
+    })
   })
   
 })
