@@ -56,10 +56,6 @@ const create = curry(function(sObject, attrs, state) {
       ...state, references: [recordResult, ...state.references]
     }
   })
-  .catch(function(err) {
-    console.error(err.stack);
-    return err;
-  })
   
 });
 
@@ -75,10 +71,6 @@ const upsert = curry(function(sObject, externalId, attrs, state) {
       ...state, references: [recordResult, ...state.references]
     }
   })
-  .catch(function(err) {
-    console.error(err);
-    return err;
-  });
 
 })
 
