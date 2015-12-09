@@ -13,8 +13,13 @@ function expandReferences(attrs, state) {
 function create(sObject, fields) {
 
   return (state) => {
-    let id = state.references.length + 1
-    let result = {sObject, fields: expandReferences(fields, state), id}
+
+    state.logger.debug(`Creating ${sObject}`)
+    state.logger.debug(JSON.stringify(state.data))
+    state.logger.debug("===================")
+
+    let Id = state.references.length + 1
+    let result = {sObject, fields: expandReferences(fields, state), Id}
 
     return {
       ...state,
@@ -35,13 +40,28 @@ function injectState(state) {
   };
 }
 
-function execute( state = {}, operations) {
+function execute( initialState = {}, operations ) {
+  
+  const state = {
+    logger: {
+      info: console.info.bind(console),
+      debug: console.log.bind(console)
+    },
+    references: [], ...initialState
+  }
 
   const start = Promise.resolve(state)
 
   return operations.reduce((acc, operation) => {
     return acc.then(operation);
   }, start)
+  .then(function(state) {
+    state.logger.info(
+      JSON.stringify(state.references, null, 2)
+    )
+    console.info("Finished Successfully");
+    return state
+  })
   .catch(function(err) {
     console.error(err.stack);
     console.info("Job failed.");

@@ -97,16 +97,16 @@ function login({username, password, securityToken}) {
 }
 
 
-function execute(
-  {credentials, connectionOptions},
-  data = {},
-  operations
-) {
+function execute( initialState = {}, operations ) {
 
   const state = {
+    logger: {
+      info: console.info.bind(console),
+      debug: console.log.bind(console)
+    },
     connection: new jsforce.Connection(connectionOptions), 
     references: [],
-    data
+    ...initialState
   }
 
   const start = login(credentials)(state).then(injectState(state));
@@ -115,7 +115,9 @@ function execute(
     return acc.then(operation);
   }, start)
   .then(function(state) {
-    console.log(state);
+    state.logger.info(
+      JSON.stringify(state.references, null, 2)
+    )
     console.info("Finished Successfully");
     return state
   })
