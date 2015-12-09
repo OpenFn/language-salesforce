@@ -78,30 +78,33 @@ const reference = curry(function(position, {references}) {
   return references[position].id;
 })
 
-function login({username, password, securityToken}) {
-  return function(state) {
-    let { connection } = state;
-    console.info(`Logging in as ${username}.`);
+function login(state) {
 
-    return connection.login( username, password + securityToken );
+  const {username, password, securityToken} = state.configuration
+  let { connection } = state;
+  console.info(`Logging in as ${username}.`);
 
-  };
+  return connection.login( username, password + securityToken )
+    .then(injectState(state))
+
 }
 
 
 function execute( initialState = {}, operations ) {
+
+  const { loginUrl } = initialState.configuration
 
   const state = {
     logger: {
       info: console.info.bind(console),
       debug: console.log.bind(console)
     },
-    connection: new jsforce.Connection(connectionOptions), 
+    connection: new jsforce.Connection({ loginUrl }), 
     references: [],
     ...initialState
   }
 
-  const start = login(credentials)(state).then(injectState(state));
+  const start = login(state);
 
   return operations.reduce((acc, operation) => {
     return acc.then(operation);
@@ -145,5 +148,5 @@ export {
 }
 
 export {
-  each, field, fields, join, source, sourceValue, map, combine
+  each, field, fields, join, lookup, source, sourceValue, map, combine
 } from './sourceHelpers';

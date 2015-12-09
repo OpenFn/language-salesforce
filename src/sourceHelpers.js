@@ -132,8 +132,13 @@ export function each(path, operation) {
 export function combine(...operations) {
   return (state) => {
     return operations.reduce((state,operation) => {
-      let result = operation(state)
-      return result
+      if (state.then) {
+        return state.then((state) => {
+          return { ...state, ...operation(state) }
+        })
+      } else {
+        return { ...state, ...operation(state) }
+      }
     }, state)
   }
 }
@@ -152,4 +157,20 @@ export function fields(...fields) {
 
 export function field(key, value) {
   return [key, value]
+}
+
+/**
+ * Adds a lookup or 'dome insert' to a record.
+ * @example <caption>Example</caption>
+ * lookup("relationship_name__r", "externalID on related object", "$.path")
+ * @constructor
+ * @param {string} relationshipName - `__r` relationship field on the record.
+ * @param {string} externalID - Salesforce ExternalID field.
+ * @param {string} path - JSONPath to data source.
+ * @returns {<Field>}
+ */
+export function lookup(relationshipName, externalId, path) {
+  return field(relationshipName, (state) => {
+    return { [externalId]: sourceValue(path)(state) }
+  })
 }
