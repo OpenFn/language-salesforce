@@ -2,6 +2,8 @@ import { expect } from 'chai';
 import { each, execute, create, source, sourceValue, steps, map } from '../src/FakeAdaptor'
 import testData from './testData';
 
+const fakeLogger = { debug: function() { } , info: function() { }}
+
 describe("JSON References", () => {
 
   describe("One to one", () => {
@@ -14,14 +16,14 @@ describe("JSON References", () => {
   describe("Use cases", () => {
 
     it("can produce a one to one", () => {
-      const state = {data: testData, references: []};
+      const state = {data: testData, references: [], logger: fakeLogger};
 
       let result = create("myObject", {
         bicycle: sourceValue("$.data.store.bicycle.color")
       })(state)
 
       expect(result.references).to.eql([ {
-        sObject: "myObject", id: 1, fields: { bicycle: "red" }
+        sObject: "myObject", Id: 1, fields: { bicycle: "red" }
       } ])
     });
 
@@ -39,7 +41,7 @@ describe("JSON References", () => {
             "fields": {
               "color": "red"
             },
-            id: 1,
+            Id: 1,
             "sObject": "Bicycle"
           }
         ]);
@@ -61,10 +63,10 @@ describe("JSON References", () => {
       ))
       .then(function({references}) {
         expect(references.reverse()).to.eql(
-          [ { sObject: 'Book', id: 1, fields: { title: 'Sayings of the Century' } },
-            { sObject: 'Book', id: 2, fields: { title: 'Sword of Honour' } },
-            { sObject: 'Book', id: 3, fields: { title: 'Moby Dick' } },
-            { sObject: 'Book', id: 4, fields: { title: 'The Lord of the Rings' } } ]
+          [ { sObject: 'Book', Id: 1, fields: { title: 'Sayings of the Century' } },
+            { sObject: 'Book', Id: 2, fields: { title: 'Sword of Honour' } },
+            { sObject: 'Book', Id: 3, fields: { title: 'Moby Dick' } },
+            { sObject: 'Book', Id: 4, fields: { title: 'The Lord of the Rings' } } ]
         );
       }).catch(function(err) {
         return err;

@@ -56,7 +56,7 @@ describe("Composition Examples", () => {
               )
             ),
             each(
-              join("$.data.rpt_catch[*]", "$.references.[0].id", "id"),
+              join("$.data.rpt_catch[*]", "$.references.[0].Id", "id"),
               combine(
                 create(
                   "Catch", 
