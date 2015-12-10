@@ -78,5 +78,5 @@ export {
 }
 
 export {
-  each, field, fields, join, source, sourceValue, map, combine
+  each, field, fields, join, lookup, source, sourceValue, map, combine
 } from './sourceHelpers';
