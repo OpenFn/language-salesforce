@@ -109,6 +109,10 @@ function asData(data, state) {
  * @returns {<Operation>}
  */
 export function each(path, operation) {
+  if (!path) {
+    throw new TypeError("path argument for each expression is invalid.")
+  }
+
   return (state) => {
     return asData(path,state).reduce(function(state, data) {
       if (state.then) {

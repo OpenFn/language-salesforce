@@ -15,11 +15,11 @@ function create(sObject, fields) {
   return (state) => {
 
     state.logger.debug(`Creating ${sObject}`)
-    state.logger.debug(JSON.stringify(state.data))
+    state.logger.debug(JSON.stringify(state.data, null, 2))
     state.logger.debug("===================")
 
-    let Id = state.references.length + 1
-    let result = {sObject, fields: expandReferences(fields, state), Id}
+    let id = state.references.length + 1
+    let result = {sObject, fields: expandReferences(fields, state), id}
 
     return {
       ...state,
@@ -28,6 +28,26 @@ function create(sObject, fields) {
 
   }
 }
+
+function upsert(sObject, externalId, fields) {
+
+  return (state) => {
+
+    state.logger.debug(`Upserting ${sObject} with externalId:`, externalId)
+    state.logger.debug(JSON.stringify(state.data, null, 2))
+    state.logger.debug("===================")
+
+    let id = state.references.length + 1
+    let result = {sObject, fields: expandReferences(fields, state), id}
+
+    return {
+      ...state,
+      references: [result, ...state.references] 
+    }
+
+  }
+}
+
 
 const reference = curry(function(position, {references}) {
   return references[position].id;
@@ -74,7 +94,8 @@ export {
   create,
   execute,
   reference,
-  steps
+  steps,
+  upsert
 }
 
 export {

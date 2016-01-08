@@ -23,7 +23,7 @@ describe("JSON References", () => {
       })(state)
 
       expect(result.references).to.eql([ {
-        sObject: "myObject", Id: 1, fields: { bicycle: "red" }
+        sObject: "myObject", id: 1, fields: { bicycle: "red" }
       } ])
     });
 
@@ -41,7 +41,7 @@ describe("JSON References", () => {
             "fields": {
               "color": "red"
             },
-            Id: 1,
+            id: 1,
             "sObject": "Bicycle"
           }
         ]);
@@ -63,10 +63,10 @@ describe("JSON References", () => {
       ))
       .then(function({references}) {
         expect(references.reverse()).to.eql(
-          [ { sObject: 'Book', Id: 1, fields: { title: 'Sayings of the Century' } },
-            { sObject: 'Book', Id: 2, fields: { title: 'Sword of Honour' } },
-            { sObject: 'Book', Id: 3, fields: { title: 'Moby Dick' } },
-            { sObject: 'Book', Id: 4, fields: { title: 'The Lord of the Rings' } } ]
+          [ { sObject: 'Book', id: 1, fields: { title: 'Sayings of the Century' } },
+            { sObject: 'Book', id: 2, fields: { title: 'Sword of Honour' } },
+            { sObject: 'Book', id: 3, fields: { title: 'Moby Dick' } },
+            { sObject: 'Book', id: 4, fields: { title: 'The Lord of the Rings' } } ]
         );
       }).catch(function(err) {
         return err;

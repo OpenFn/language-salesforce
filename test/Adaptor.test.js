@@ -57,7 +57,7 @@ describe("Adaptor", () => {
       let spy = sinon.spy(connection, "upsert");
 
       upsert(sObject, externalId, fields, state).then((state) => {
-        expect(spy.args[0]).to.eql([ sObject, externalId, fields ])
+        expect(spy.args[0]).to.eql([ sObject, fields, externalId ])
         expect(spy.called).to.eql(true)
         expect(state.references[0]).to.eql({Id: 10})
       }).then(done).catch(done)

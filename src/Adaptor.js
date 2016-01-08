@@ -62,9 +62,11 @@ const create = curry(function(sObject, attrs, state) {
 const upsert = curry(function(sObject, externalId, attrs, state) {
   let {connection, references} = state;
   const finalAttrs = expandReferences(state, attrs)
-  console.info(`Upserting ${sObject} with externalId`, externalId, ":" , finalAttrs);
+  console.info(
+    `Upserting ${sObject} with externalId`, externalId, ":" , finalAttrs
+  );
 
-  return connection.upsert(sObject, externalId, finalAttrs)
+  return connection.upsert(sObject, finalAttrs, externalId)
   .then(function(recordResult) {
     console.log('Result : ' + JSON.stringify(recordResult));
     return {
