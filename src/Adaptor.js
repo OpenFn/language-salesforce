@@ -149,6 +149,8 @@ export {
   reference, steps
 }
 
+export { field, fields } from './sourceHelpers';
+
 export {
-  each, field, fields, join, lookup, source, sourceValue, map, combine
-} from './sourceHelpers';
+  each, join, lookup, source, sourceValue, map, combine
+} from 'language-common';
