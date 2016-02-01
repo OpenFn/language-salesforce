@@ -4,7 +4,7 @@
   "description": "Salesforce Language Pack for OpenFn",
   "main": "lib/index.js",
   "scripts": {
-    "watch": "mocha -w --compilers js:babel-core/register",
+    "test:watch": "mocha -w --compilers js:babel-core/register",
     "build": "make",
     "test": "mocha --compilers js:babel-core/register"
   },

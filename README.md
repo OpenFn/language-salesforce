@@ -121,15 +121,11 @@ Returns `state`
 Development
 -----------
 
-```
-$ npm install
-```
+Clone the repo, run `npm install`.
 
-**Running Tests**
+Run tests using `npm run test` or `npm run test:watch`
 
-```
-$ npm test
-```
+Build the project using `make`.
 
 
 
