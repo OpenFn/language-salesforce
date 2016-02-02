@@ -30,11 +30,11 @@ describe("JSON References", () => {
     it("can create an object", function(done) {
       const state = {data: testData, references: []};
 
-      execute(state, steps(
+      execute(steps(
         create('Bicycle', {
           color: sourceValue("$.data.store.bicycle.color")
         })
-      ))
+      ))(state)
       .then(function({references}) {
         expect(references).to.eql([
           {
@@ -54,13 +54,13 @@ describe("JSON References", () => {
     it("can create many objects", function(done) {
       const state = {data: testData, references: []};
 
-      execute(state, steps(
+      execute(steps(
         each("$.data.store.book[*]",
             create("Book", {
               title: sourceValue("$.data.title")
             })
            ),
-      ))
+      ))(state)
       .then(function({references}) {
         expect(references.reverse()).to.eql(
           [ { sObject: 'Book', id: 1, fields: { title: 'Sayings of the Century' } },

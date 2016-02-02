@@ -1,9 +1,11 @@
+import { execute as commonExecute } from 'language-common';
 import { curry, mapValues, flatten } from 'lodash-fp';
 
 function steps(...operations) {
   return flatten(operations);
 }
 
+// TODO: use the one from language-common
 function expandReferences(attrs, state) {
   return mapValues(function(value) {
     return typeof value == 'function' ? value(state) : value;
@@ -53,39 +55,33 @@ const reference = curry(function(position, {references}) {
   return references[position].id;
 })
 
-// Utils
-function injectState(state) {
-  return function() {
-    return state;
-  };
-}
 
-function execute( initialState = {}, operations ) {
+function execute(...operations) {
   
-  const state = {
+  const initialState = {
     logger: {
       info: console.info.bind(console),
       debug: console.log.bind(console)
     },
-    references: [], ...initialState
+    references: [],
+    data: null
   }
 
-  const start = Promise.resolve(state)
-
-  return operations.reduce((acc, operation) => {
-    return acc.then(operation);
-  }, start)
-  .then(function(state) {
-    state.logger.info(
-      JSON.stringify(state.references, null, 2)
-    )
-    console.info("Finished Successfully");
-    return state
-  })
-  .catch(function(err) {
-    console.error(err.stack);
-    console.info("Job failed.");
-  })
+  return state => {
+    // Note: we no longer need `steps` anymore since `commonExecute`
+    return commonExecute(...flatten(operations))({ ...initialState, ...state })
+    .then(function(state) {
+      state.logger.info(
+        JSON.stringify(state.references, null, 2)
+      )
+      console.info("Finished Successfully");
+      return state
+    })
+    .catch(function(err) {
+      console.error(err.stack);
+      console.info("Job failed.");
+    })
+  };
   
 }
 
@@ -98,8 +94,8 @@ export {
   upsert
 }
 
-export { field, fields } from './sourceHelpers';
+export { lookup } from './sourceHelpers';
 
 export {
-  each, join, lookup, source, sourceValue, map, combine
+  each, join, fields, field, source, sourceValue, map, combine
 } from 'language-common';

@@ -1,3 +1,4 @@
+import { execute as commonExecute } from 'language-common';
 import jsforce from 'jsforce';
 import { curry, mapValues, flatten } from 'lodash-fp';
 
@@ -80,6 +81,17 @@ const reference = curry(function(position, {references}) {
   return references[position].id;
 })
 
+
+function createConnection(state) {
+  const { loginUrl } = state.configuration;
+
+  if (!loginUrl) {
+    throw new Error("loginUrl missing from configuration.")
+  }
+
+  return { ...state, connection: new jsforce.Connection({ loginUrl }) }
+}
+
 function login(state) {
 
   const {username, password, securityToken} = state.configuration
@@ -91,41 +103,31 @@ function login(state) {
 
 }
 
+function execute(...operations) {
 
-function execute( initialState = {}, operations ) {
-
-  const { loginUrl } = initialState.configuration
-
-  const state = {
+  const initialState = {
     logger: {
       info: console.info.bind(console),
       debug: console.log.bind(console)
     },
-    connection: new jsforce.Connection({ loginUrl }), 
     references: [],
-    ...initialState
+    data: null,
+    configuration: {}
   }
 
-  const start = login(state);
+  return state => {
+    // Note: we no longer need `steps` anymore since `commonExecute`
+    // takes each operation as an argument.
+    return commonExecute(
+      createConnection,
+      login,
+      ...flatten(operations)
+    )({ ...initialState, ...state }) 
 
-  return operations.reduce((acc, operation) => {
-    return acc.then(operation);
-  }, start)
-  .then(function(state) {
-    state.logger.info(
-      JSON.stringify(state.references, null, 2)
-    )
-    console.info("Finished Successfully");
-    return state
-  })
-  .catch(function(err) {
-    console.error(err);
-    console.log(err.stack);
-    console.info("Job failed.");
-    process.exit(1);
-  });
-  
+  };
+
 }
+
 
 // Utils
 function injectState(state) {
@@ -149,8 +151,8 @@ export {
   reference, steps
 }
 
-export { field, fields } from './sourceHelpers';
+export { lookup } from './sourceHelpers';
 
 export {
-  each, join, lookup, source, sourceValue, map, combine
+  each, join, fields, field, source, sourceValue, map, combine
 } from 'language-common';

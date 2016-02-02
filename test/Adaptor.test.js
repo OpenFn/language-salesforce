@@ -72,7 +72,7 @@ describe("Adaptor", () => {
 
     function executionWrapper(initialState) {
       return (operations) => {
-        return execute(initialState, operations)
+        return execute(operations)(initialState)
       }
     }
 

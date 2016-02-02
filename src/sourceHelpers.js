@@ -2,14 +2,6 @@ import { curry, merge, reduce, zipObject } from 'lodash-fp';
 import { sourceValue } from 'language-common';
 import JSONPath from 'JSONPath';
 
-export function fields(...fields) {
-  return zipObject(fields,undefined)
-}
-
-export function field(key, value) {
-  return [key, value]
-}
-
 /**
  * Adds a lookup or 'dome insert' to a record.
  * @example <caption>Example</caption>
@@ -25,4 +17,3 @@ export function lookup(relationshipName, externalId, path) {
     return { [externalId]: sourceValue(path)(state) }
   })
 }
-
