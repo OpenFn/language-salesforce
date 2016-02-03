@@ -1,5 +1,5 @@
 import { curry, merge, reduce, zipObject } from 'lodash-fp';
-import { sourceValue } from 'language-common';
+import { sourceValue, field } from 'language-common';
 import JSONPath from 'JSONPath';
 
 /**
