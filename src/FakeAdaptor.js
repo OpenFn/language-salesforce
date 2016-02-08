@@ -97,5 +97,7 @@ export {
 export { lookup } from './sourceHelpers';
 
 export {
-  each, join, fields, field, source, sourceValue, map, combine
+  each, join, fields, field, source, sourceValue, map, combine,
+  merge, dataPath, dataValue, referencePath, lastReferenceValue
 } from 'language-common';
+

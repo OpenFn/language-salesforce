@@ -8,7 +8,7 @@ describe("JSON References", () => {
 
   describe("One to one", () => {
     it("references a given path", () => {
-      let value = sourceValue("$.data.store.bicycle.color", {data: testData});
+      let value = sourceValue("$.data.store.bicycle.color")({data: testData});
       expect(value).to.eql("red");
     })
   })
