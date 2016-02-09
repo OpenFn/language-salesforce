@@ -155,5 +155,6 @@ export { lookup } from './sourceHelpers';
 
 export {
   each, join, fields, field, source, sourceValue, map, combine,
-  merge, dataPath, dataValue, referencePath, lastReferenceValue
+  merge, dataPath, dataValue, referencePath, lastReferenceValue,
+  index
 } from 'language-common';
