@@ -9,7 +9,7 @@ function steps(...operations) {
 function expandReferences(attrs, state) {
   return mapValues(function(value) {
     return typeof value == 'function' ? value(state) : value;
-  })(attrs); 
+  })(attrs);
 }
 
 function create(sObject, fields) {
@@ -25,7 +25,7 @@ function create(sObject, fields) {
 
     return {
       ...state,
-      references: [result, ...state.references] 
+      references: [result, ...state.references]
     }
 
   }
@@ -44,7 +44,7 @@ function upsert(sObject, externalId, fields) {
 
     return {
       ...state,
-      references: [result, ...state.references] 
+      references: [result, ...state.references]
     }
 
   }
@@ -57,7 +57,7 @@ const reference = curry(function(position, {references}) {
 
 
 function execute(...operations) {
-  
+
   const initialState = {
     logger: {
       info: console.info.bind(console),
@@ -82,7 +82,7 @@ function execute(...operations) {
       console.info("Job failed.");
     })
   };
-  
+
 }
 
 
@@ -94,11 +94,10 @@ export {
   upsert
 }
 
-export { lookup } from './sourceHelpers';
+export { lookup, relationship } from './sourceHelpers';
 
 export {
   each, join, fields, field, source, sourceValue, map, combine,
   merge, dataPath, dataValue, referencePath, lastReferenceValue,
   index
 } from 'language-common';
-

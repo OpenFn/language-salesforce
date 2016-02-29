@@ -34,7 +34,7 @@ const describe = curry(function(sObject, state) {
     console.error(err);
     return err;
   })
-  
+
 });
 
 /**
@@ -57,7 +57,7 @@ const create = curry(function(sObject, attrs, state) {
       ...state, references: [recordResult, ...state.references]
     }
   })
-  
+
 });
 
 const upsert = curry(function(sObject, externalId, attrs, state) {
@@ -122,7 +122,7 @@ function execute(...operations) {
       createConnection,
       login,
       ...flatten(operations)
-    )({ ...initialState, ...state }) 
+    )({ ...initialState, ...state })
 
   };
 
@@ -143,7 +143,7 @@ function steps(...operations) {
 function expandReferences(state, attrs) {
   return mapValues(function(value) {
     return typeof value == 'function' ? value(state) : value;
-  })(attrs); 
+  })(attrs);
 }
 
 export {
@@ -151,7 +151,7 @@ export {
   reference, steps
 }
 
-export { lookup } from './sourceHelpers';
+export { lookup, relationship } from './sourceHelpers';
 
 export {
   each, join, fields, field, source, sourceValue, map, combine,
