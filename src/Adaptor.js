@@ -156,5 +156,5 @@ export { lookup, relationship } from './sourceHelpers';
 export {
   each, join, fields, field, source, sourceValue, map, combine,
   merge, dataPath, dataValue, referencePath, lastReferenceValue,
-  index
+  index, beta
 } from 'language-common';
