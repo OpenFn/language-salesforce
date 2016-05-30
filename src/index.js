@@ -1,4 +1,5 @@
-import * as Adaptor from './Adaptor';
+import Adaptor from './Adaptor';
+import FakeAdaptor from './FakeAdaptor';
 
-export * as FakeAdaptor from './FakeAdaptor';
 export default Adaptor;
+export { FakeAdaptor };

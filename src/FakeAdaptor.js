@@ -1,6 +1,8 @@
 import { execute as commonExecute } from 'language-common';
 import { curry, mapValues, flatten } from 'lodash-fp';
 
+/** @module FakeAdaptor */
+
 function steps(...operations) {
   return flatten(operations);
 }

@@ -9,7 +9,7 @@ import { sourceValue, field } from 'language-common';
  * @param {string} relationshipName - `__r` relationship field on the record.
  * @param {string} externalID - Salesforce ExternalID field.
  * @param {string} path - JSONPath to data source.
- * @returns {<Field>}
+ * @returns {object}
  */
 export function lookup(relationshipName, externalId, path) {
   return field(relationshipName, (state) => {
@@ -27,8 +27,8 @@ export function lookup(relationshipName, externalId, path) {
  * @constructor
  * @param {string} relationshipName - `__r` relationship field on the record.
  * @param {string} externalID - Salesforce ExternalID field.
- * @param {<DataSource>|string} dataSource - resolvable source.
- * @returns {<Field>}
+ * @param {string} dataSource - resolvable source.
+ * @returns {object}
  */
 export function relationship(relationshipName, externalId, dataSource) {
   return field(relationshipName, (state) => {

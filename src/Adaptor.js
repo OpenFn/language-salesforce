@@ -2,6 +2,8 @@ import { execute as commonExecute } from 'language-common';
 import jsforce from 'jsforce';
 import { curry, mapValues, flatten } from 'lodash-fp';
 
+/** @module Adaptor */
+
 /**
  * @typedef {Object} State
  * @property {object} data JSON Data.
@@ -20,7 +22,7 @@ import { curry, mapValues, flatten } from 'lodash-fp';
  * @param {State} state - Runtime state.
  * @returns {Operation}
  */
-const describe = curry(function(sObject, state) {
+export const describe = curry(function(sObject, state) {
   let {connection} = state;
 
   return connection.sobject(sObject).describe()
@@ -39,13 +41,13 @@ const describe = curry(function(sObject, state) {
 
 /**
  * Create a new object.
- * @constructor
+ * @function
  * @param {String} sObject - API name of the sObject.
  * @param {Object} attrs - Field attributes for the new object.
  * @param {State} state - Runtime state.
  * @returns {Operation}
  */
-const create = curry(function(sObject, attrs, state) {
+export const create = curry(function(sObject, attrs, state) {
   let {connection, references} = state;
   const finalAttrs = expandReferences(state, attrs)
   console.info(`Creating ${sObject}`, finalAttrs);
@@ -60,7 +62,7 @@ const create = curry(function(sObject, attrs, state) {
 
 });
 
-const upsert = curry(function(sObject, externalId, attrs, state) {
+export const upsert = curry(function(sObject, externalId, attrs, state) {
   let {connection, references} = state;
   const finalAttrs = expandReferences(state, attrs)
   console.info(
@@ -77,7 +79,7 @@ const upsert = curry(function(sObject, externalId, attrs, state) {
 
 })
 
-const reference = curry(function(position, {references}) {
+export const reference = curry(function(position, {references}) {
   return references[position].id;
 })
 
@@ -103,7 +105,7 @@ function login(state) {
 
 }
 
-function execute(...operations) {
+export function execute(...operations) {
 
   const initialState = {
     logger: {
@@ -136,7 +138,7 @@ function injectState(state) {
   };
 }
 
-function steps(...operations) {
+export function steps(...operations) {
   return flatten(operations);
 }
 
@@ -144,11 +146,6 @@ function expandReferences(state, attrs) {
   return mapValues(function(value) {
     return typeof value == 'function' ? value(state) : value;
   })(attrs);
-}
-
-export {
-  execute, describe, create, upsert,
-  reference, steps
 }
 
 export { lookup, relationship } from './sourceHelpers';
