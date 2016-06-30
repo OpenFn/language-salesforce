@@ -9,7 +9,11 @@
     "test": "mocha --compilers js:babel-core/register"
   },
   "author": "Open Function Group",
-  "license": "LGPLv3",
+  "license": "LGPL-3.0",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/OpenFn/language-salesforce.git"
+  },
   "files": [
     "lib/"
   ],
