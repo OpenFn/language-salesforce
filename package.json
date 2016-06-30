@@ -1,6 +1,6 @@
 {
   "name": "language-salesforce",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Salesforce Language Pack for OpenFn",
   "main": "lib/index.js",
   "scripts": {

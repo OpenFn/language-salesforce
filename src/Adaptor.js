@@ -101,7 +101,7 @@ function login(state) {
   console.info(`Logging in as ${username}.`);
 
   return connection.login( username, password + securityToken )
-    .then(injectState(state))
+    .then(() => state)
 
 }
 
@@ -123,7 +123,8 @@ export function execute(...operations) {
     return commonExecute(
       createConnection,
       login,
-      ...flatten(operations)
+      ...flatten(operations),
+      cleanupState
     )({ ...initialState, ...state })
 
   };
@@ -131,11 +132,15 @@ export function execute(...operations) {
 }
 
 
-// Utils
-function injectState(state) {
-  return function() {
-    return state;
-  };
+/**
+ * Removes unserializable keys from the state.
+ * @constructor
+ * @param {State} state
+ * @returns {State}
+ */
+function cleanupState(state) {
+  delete state.connection;
+  return state;
 }
 
 export function steps(...operations) {

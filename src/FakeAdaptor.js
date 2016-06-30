@@ -71,7 +71,13 @@ function execute(...operations) {
 
   return state => {
     // Note: we no longer need `steps` anymore since `commonExecute`
-    return commonExecute(...flatten(operations))({ ...initialState, ...state })
+    return commonExecute(
+      ...flatten(operations),
+      function(state) {
+        delete state.connection;
+        return state;
+      }
+    )({ ...initialState, ...state })
     .then(function(state) {
       state.logger.info(
         JSON.stringify(state.references, null, 2)
