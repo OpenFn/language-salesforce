@@ -79,6 +79,21 @@ export const upsert = curry(function(sObject, externalId, attrs, state) {
 
 })
 
+export const update = curry(function(sObject, attrs, state) {
+  let {connection, references} = state;
+  const finalAttrs = expandReferences(state, attrs)
+  console.info(`Updating ${sObject}`, finalAttrs);
+
+  return connection.update(sObject, finalAttrs)
+  .then(function(recordResult) {
+    console.log('Result : ' + JSON.stringify(recordResult));
+    return {
+      ...state, references: [recordResult, ...state.references]
+    }
+  })
+
+});
+
 export const reference = curry(function(position, {references}) {
   return references[position].id;
 })

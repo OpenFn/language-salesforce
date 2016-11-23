@@ -33,6 +33,25 @@ function create(sObject, fields) {
   }
 }
 
+function update(sObject, fields) {
+
+  return (state) => {
+
+    state.logger.debug(`Updating ${sObject}`)
+    state.logger.debug(JSON.stringify(state.data, null, 2))
+    state.logger.debug("===================")
+
+    let id = state.references.length + 1
+    let result = {sObject, fields: expandReferences(fields, state), id}
+
+    return {
+      ...state,
+      references: [result, ...state.references]
+    }
+
+  }
+}
+
 function upsert(sObject, externalId, fields) {
 
   return (state) => {
@@ -99,6 +118,7 @@ export {
   execute,
   reference,
   steps,
+  update,
   upsert
 }
 
