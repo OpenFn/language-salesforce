@@ -62,6 +62,40 @@ export const create = curry(function(sObject, attrs, state) {
 
 });
 
+/**
+ * Create a new object if conditions are met.
+ * @function
+ * @param {boolean} logical - a logical statement that will be evaluated.
+ * @param {String} sObject - API name of the sObject.
+ * @param {Object} attrs - Field attributes for the new object.
+ * @param {State} state - Runtime state.
+ * @returns {Operation}
+ */
+export const createIf = curry(function(logical, sObject, attrs, state) {
+  let {connection, references} = state;
+  const finalAttrs = expandReferences(state, attrs)
+  if (logical) {
+    console.info(`Creating ${sObject}`, finalAttrs);
+  } else {
+    console.info(`Not creating ${sObject}`);
+  };
+
+  if (logical) {
+    return connection.create(sObject, finalAttrs)
+    .then(function(recordResult) {
+      console.log('Result : ' + JSON.stringify(recordResult));
+      return {
+        ...state, references: [recordResult, ...state.references]
+      }
+    })
+  } else {
+    return {
+      ...state
+    }
+  }
+
+});
+
 export const upsert = curry(function(sObject, externalId, attrs, state) {
   let {connection, references} = state;
   const finalAttrs = expandReferences(state, attrs)

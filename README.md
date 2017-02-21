@@ -98,16 +98,19 @@ Executing a build
 API
 ---
 
-`field("key","value")`  
+`field("key","value")`
 Returns `{ "key": "value" }`
 
-`create(sObject, fields ...)`  
+`create(sObject, fields ...)`
 Returns `state`
 
-`upsert(sObject, externalID, fields ...)`  
+`createIf(logical, sObject, fields ...)`
 Returns `state`
 
-`steps( operations ... )`  
+`upsert(sObject, externalID, fields ...)`
+Returns `state`
+
+`steps( operations ... )`
 Returns `Array<Operation>`
 
 `map(<JSONPath>, <Operation>, state)`
@@ -126,7 +129,3 @@ Clone the repo, run `npm install`.
 Run tests using `npm run test` or `npm run test:watch`
 
 Build the project using `make`.
-
-
-
-
