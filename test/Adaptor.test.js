@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
-import { reference, create, upsert, steps, each,
+import { reference, create, createIf, upsert, upsertIf, steps, each,
   field, fields, sourceValue } from '../src/Adaptor';
 import { execute } from '../src/FakeAdaptor';
 import testData from './testData';
@@ -39,6 +39,35 @@ describe("Adaptor", () => {
     })
   })
 
+  describe("createIf", () => {
+
+    it("doesn't create a new sObject if a logical is false")
+
+    it("makes a new sObject if a logical is true", (done) => {
+
+      const fakeConnection = {
+        create: function() {
+          return Promise.resolve({Id: 10})
+        }
+      };
+      let state = { connection: fakeConnection, references: [] };
+
+      let logical = 1 + 1 == 2;
+
+      let sObject = "myObject";
+      let fields = { field: "value" };
+
+      let spy = sinon.spy(fakeConnection, "create");
+
+      createIf(logical, sObject, fields, state).then((state) => {
+        expect(spy.args[0]).to.eql([ sObject, fields ]);
+        expect(spy.called).to.eql(true);
+        expect(state.references[0]).to.eql({Id: 10})
+      }).then(done).catch(done)
+    })
+
+  })
+
   describe("upsert", () => {
 
     it("is expected to call `upsert` on the connection", (done) => {
@@ -62,6 +91,34 @@ describe("Adaptor", () => {
         expect(state.references[0]).to.eql({Id: 10})
       }).then(done).catch(done)
     })
+  })
+
+  describe("upsertIf", () => {
+
+    it("upserts if a logical is true", (done) => {
+
+      const fakeConnection = {
+        upsert: function() {
+          return Promise.resolve({Id: 10})
+        }
+      };
+      let state = { connection: fakeConnection, references: [] };
+
+      let logical = 1 + 1 == 2;
+
+      let sObject = "myObject";
+      let externalId = "MyExternalId";
+      let fields = { field: "value" };
+
+      let spy = sinon.spy(fakeConnection, "upsert");
+
+      upsertIf(logical, sObject, externalId, fields, state).then((state) => {
+        expect(spy.args[0]).to.eql([ sObject, fields, externalId ])
+        expect(spy.called).to.eql(true)
+        expect(state.references[0]).to.eql({Id: 10})
+      }).then(done).catch(done)
+    })
+
   })
 
 
