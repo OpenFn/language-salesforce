@@ -1,4 +1,4 @@
-language-salesforce
+language-salesforce [![Build Status](https://travis-ci.org/OpenFn/language-salesforce.svg?branch=master)](https://travis-ci.org/OpenFn/language-salesforce)
 ===================
 
 Experimental Salesforce Language Pack for OpenFn
