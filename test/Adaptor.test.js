@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
 import { reference, create, upsert, steps, each,
-  field, fields, sourceValue } from '../src/adaptor';
+  field, fields, sourceValue } from '../src/Adaptor';
 import { execute } from '../src/FakeAdaptor';
 import testData from './testData';
 
@@ -21,7 +21,7 @@ describe("Adaptor", () => {
 
       const fakeConnection = {
         create: function() {
-          return Promise.resolve({Id: 10})  
+          return Promise.resolve({Id: 10})
         }
       };
       let state = { connection: fakeConnection, references: [] };
@@ -45,7 +45,7 @@ describe("Adaptor", () => {
 
       const connection = {
         upsert: function() {
-          return Promise.resolve({Id: 10})  
+          return Promise.resolve({Id: 10})
         }
       };
       let state = { connection, references: [] };
@@ -79,7 +79,7 @@ describe("Adaptor", () => {
     let counter = 0
     const fakeConnection = {
       create: function(sObject, attrs) {
-        return Promise.resolve({sObject, fields: attrs, Id: counter+=1})  
+        return Promise.resolve({sObject, fields: attrs, Id: counter+=1})
       }
     };
 
