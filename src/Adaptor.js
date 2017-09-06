@@ -17,10 +17,15 @@ import { curry, mapValues, flatten } from 'lodash-fp';
 
 /**
  * Outputs basic information about an sObject to `STDOUT`.
- * @constructor
+ * @example
+ *  describe(
+ *    'obj_name',
+ *    state
+ *  )
+ * @function
  * @param {String} sObject - API name of the sObject.
  * @param {State} state - Runtime state.
- * @returns {Operation}
+ * @returns {State}
  */
 export const describe = curry(function(sObject, state) {
   let {connection} = state;
@@ -41,6 +46,14 @@ export const describe = curry(function(sObject, state) {
 
 /**
  * Create a new object.
+ * @example
+ *  create(
+ *    'obj_name',
+ *    {
+ *      attr1: "foo",
+ *      attr2: "bar"
+ *    },
+ *    state)
  * @function
  * @param {String} sObject - API name of the sObject.
  * @param {Object} attrs - Field attributes for the new object.
@@ -64,6 +77,15 @@ export const create = curry(function(sObject, attrs, state) {
 
 /**
  * Create a new object if conditions are met.
+ * @example
+ *  createIf(
+ *    true,
+ *    'obj_name',
+ *    {
+ *      attr1: "foo",
+ *      attr2: "bar"
+ *    },
+ *    state)
  * @function
  * @param {boolean} logical - a logical statement that will be evaluated.
  * @param {String} sObject - API name of the sObject.
@@ -96,6 +118,24 @@ export const createIf = curry(function(logical, sObject, attrs, state) {
 
 });
 
+/**
+ * Upsert an object.
+ * @example
+ *  upsert(
+ *    'obj_name',
+ *    'ext_id',
+ *    {
+ *      attr1: "foo",
+ *      attr2: "bar"
+ *    },
+ *    state)
+ * @function
+ * @param {String} sObject - API name of the sObject.
+ * @param {String} externalId - ID.
+ * @param {Object} attrs - Field attributes for the new object.
+ * @param {State} state - Runtime state.
+ * @returns {Operation}
+ */
 export const upsert = curry(function(sObject, externalId, attrs, state) {
   let {connection, references} = state;
   const finalAttrs = expandReferences(state, attrs)
@@ -115,9 +155,20 @@ export const upsert = curry(function(sObject, externalId, attrs, state) {
 
 /**
  * Upsert if conditions are met.
+ * @example
+ *  upsert(
+ *    true,
+ *    'obj_name',
+ *    'ext_id',
+ *    {
+ *      attr1: "foo",
+ *      attr2: "bar"
+ *    },
+ *    state)
  * @function
  * @param {boolean} logical - a logical statement that will be evaluated.
  * @param {String} sObject - API name of the sObject.
+ * @param {String} externalId - ID.
  * @param {Object} attrs - Field attributes for the new object.
  * @param {State} state - Runtime state.
  * @returns {Operation}
@@ -149,6 +200,22 @@ export const upsertIf = curry(function(logical, sObject, externalId, attrs, stat
 
 });
 
+/**
+ * Update an object.
+ * @example
+ *  update(
+ *    'obj_name',
+ *    {
+ *      attr1: "foo",
+ *      attr2: "bar"
+ *    },
+ *    state)
+ * @function
+ * @param {String} sObject - API name of the sObject.
+ * @param {Object} attrs - Field attributes for the new object.
+ * @param {State} state - Runtime state.
+ * @returns {Operation}
+ */
 export const update = curry(function(sObject, attrs, state) {
   let {connection, references} = state;
   const finalAttrs = expandReferences(state, attrs)
@@ -164,11 +231,25 @@ export const update = curry(function(sObject, attrs, state) {
 
 });
 
+/**
+ * Get a reference ID by an index.
+ * @function
+ * @param {number} position - Position for references array.
+ * @param {State} references - Array of references.
+ * @returns {State}
+ */
 export const reference = curry(function(position, {references}) {
   return references[position].id;
 })
 
-
+/**
+ * Creates a connection.
+ * @example
+ *  createConnection(state)
+ * @function
+ * @param {State} state - Runtime state.
+ * @returns {State}
+ */
 function createConnection(state) {
   const { loginUrl } = state.configuration;
 
@@ -179,6 +260,14 @@ function createConnection(state) {
   return { ...state, connection: new jsforce.Connection({ loginUrl }) }
 }
 
+/**
+ * Performs a login.
+ * @example
+ *  login(state)
+ * @function
+ * @param {State} state - Runtime state.
+ * @returns {State}
+ */
 function login(state) {
 
   const {username, password, securityToken} = state.configuration
@@ -190,6 +279,12 @@ function login(state) {
 
 }
 
+/**
+ * Executes an operation.
+ * @function
+ * @param {Operation} operations - Operations
+ * @returns {State}
+ */
 export function execute(...operations) {
 
   const initialState = {
@@ -219,6 +314,8 @@ export function execute(...operations) {
 
 /**
  * Removes unserializable keys from the state.
+ * @example
+ *  cleanupState(state)
  * @constructor
  * @param {State} state
  * @returns {State}
@@ -228,10 +325,31 @@ function cleanupState(state) {
   return state;
 }
 
+/**
+ * Flattens an array of operations.
+ * @function
+ * @param {Array} operations - Operations
+ * @returns {Array}
+ */
 export function steps(...operations) {
   return flatten(operations);
 }
 
+/**
+ * Expands references.
+ * @example
+ *  expandReferences(
+ *    state,
+ *    {
+ *      attr1: "foo",
+ *      attr2: "bar"
+ *    }
+ *  )
+ * @function
+ * @param {State} state - Runtime state.
+ * @param {Object} attrs - Field attributes for the new object.
+ * @returns {State}
+ */
 function expandReferences(state, attrs) {
   return mapValues(function(value) {
     return typeof value == 'function' ? value(state) : value;
