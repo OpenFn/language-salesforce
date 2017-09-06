@@ -62,6 +62,15 @@ export const create = curry(function(sObject, attrs, state) {
 
 });
 
+/**
+ * Upsert.
+ * @function
+ * @param {String} sObject - API name of the sObject.
+ * @param {String} externalId - ID.
+ * @param {Object} attrs - Field attributes for the new object.
+ * @param {State} state - Runtime state.
+ * @returns {Operation}
+ */
 export const upsert = curry(function(sObject, externalId, attrs, state) {
   let {connection, references} = state;
   const finalAttrs = expandReferences(state, attrs)
@@ -79,11 +88,23 @@ export const upsert = curry(function(sObject, externalId, attrs, state) {
 
 })
 
+/**
+ * Get Reference.
+ * @function
+ * @param {number} position - Position for references array.
+ * @param {References} references - Array of references.
+ * @returns {Reference}
+ */
 export const reference = curry(function(position, {references}) {
   return references[position].id;
 })
 
-
+/**
+ * Creates a connection.
+ * @function
+ * @param {State} state - Runtime state.
+ * @returns {State}
+ */
 function createConnection(state) {
   const { loginUrl } = state.configuration;
 
@@ -94,6 +115,12 @@ function createConnection(state) {
   return { ...state, connection: new jsforce.Connection({ loginUrl }) }
 }
 
+/**
+ * Performs a login.
+ * @function
+ * @param {State} state - Runtime state.
+ * @returns {State}
+ */
 function login(state) {
 
   const {username, password, securityToken} = state.configuration
@@ -147,6 +174,13 @@ export function steps(...operations) {
   return flatten(operations);
 }
 
+/**
+ * Expands references.
+ * @function
+ * @param {State} state - Runtime state.
+ * @param {Object} attrs - Field attributes for the new object.
+ * @returns {State}
+ */
 function expandReferences(state, attrs) {
   return mapValues(function(value) {
     return typeof value == 'function' ? value(state) : value;
