@@ -1,22 +1,23 @@
+/** @module Adaptor */
+
+/**
+* @typedef {Object} State
+* @property {object} data JSON Data.
+* @property {Array<Reference>} references History of all previous operations.
+*/
+
+/**
+* @typedef {Function} Operation
+* @param {State} state
+*/
+
 import { execute as commonExecute } from 'language-common';
 import jsforce from 'jsforce';
 import { curry, mapValues, flatten } from 'lodash-fp';
 
-/** @module Adaptor */
-
-/**
- * @typedef {Object} State
- * @property {object} data JSON Data.
- * @property {Array<Reference>} references History of all previous operations.
- */
-
-/**
- * @typedef {Function} Operation
- * @param {State} state
- */
-
 /**
  * Outputs basic information about an sObject to `STDOUT`.
+ * @public
  * @example
  *  describe(
  *    'obj_name',
@@ -46,6 +47,7 @@ export const describe = curry(function(sObject, state) {
 
 /**
  * Create a new object.
+ * @public
  * @example
  *  create(
  *    'obj_name',
@@ -77,6 +79,7 @@ export const create = curry(function(sObject, attrs, state) {
 
 /**
  * Create a new object if conditions are met.
+ * @public
  * @example
  *  createIf(
  *    true,
@@ -120,6 +123,7 @@ export const createIf = curry(function(logical, sObject, attrs, state) {
 
 /**
  * Upsert an object.
+ * @public
  * @example
  *  upsert(
  *    'obj_name',
@@ -155,6 +159,7 @@ export const upsert = curry(function(sObject, externalId, attrs, state) {
 
 /**
  * Upsert if conditions are met.
+ * @public
  * @example
  *  upsert(
  *    true,
@@ -202,6 +207,7 @@ export const upsertIf = curry(function(logical, sObject, externalId, attrs, stat
 
 /**
  * Update an object.
+ * @public
  * @example
  *  update(
  *    'obj_name',
@@ -233,12 +239,14 @@ export const update = curry(function(sObject, attrs, state) {
 
 /**
  * Get a reference ID by an index.
+ * @public
  * @function
  * @param {number} position - Position for references array.
- * @param {State} references - Array of references.
+ * @param {State} state - Array of references.
  * @returns {State}
  */
-export const reference = curry(function(position, {references}) {
+export const reference = curry(function(position, state) {
+  const { references } = state;
   return references[position].id;
 })
 
@@ -316,7 +324,7 @@ export function execute(...operations) {
  * Removes unserializable keys from the state.
  * @example
  *  cleanupState(state)
- * @constructor
+ * @function
  * @param {State} state
  * @returns {State}
  */
@@ -327,8 +335,13 @@ function cleanupState(state) {
 
 /**
  * Flattens an array of operations.
+ * @public
+ * @example
+ *  steps(
+ *    createIf(params),
+ *    update(params)
+ *  )
  * @function
- * @param {Array} operations - Operations
  * @returns {Array}
  */
 export function steps(...operations) {
