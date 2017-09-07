@@ -19,10 +19,7 @@ import { curry, mapValues, flatten } from 'lodash-fp';
  * Outputs basic information about an sObject to `STDOUT`.
  * @public
  * @example
- *  describe(
- *    'obj_name',
- *    state
- *  )
+ *  describe('obj_name')
  * @function
  * @param {String} sObject - API name of the sObject.
  * @param {State} state - Runtime state.
@@ -49,13 +46,10 @@ export const describe = curry(function(sObject, state) {
  * Create a new object.
  * @public
  * @example
- *  create(
- *    'obj_name',
- *    {
- *      attr1: "foo",
- *      attr2: "bar"
- *    },
- *    state)
+ *  create('obj_name', {
+ *    attr1: "foo",
+ *    attr2: "bar"
+ *  })
  * @function
  * @param {String} sObject - API name of the sObject.
  * @param {Object} attrs - Field attributes for the new object.
@@ -81,14 +75,10 @@ export const create = curry(function(sObject, attrs, state) {
  * Create a new object if conditions are met.
  * @public
  * @example
- *  createIf(
- *    true,
- *    'obj_name',
- *    {
- *      attr1: "foo",
- *      attr2: "bar"
- *    },
- *    state)
+ *  createIf(true, 'obj_name', {
+ *    attr1: "foo",
+ *    attr2: "bar"
+ *  })
  * @function
  * @param {boolean} logical - a logical statement that will be evaluated.
  * @param {String} sObject - API name of the sObject.
@@ -125,14 +115,10 @@ export const createIf = curry(function(logical, sObject, attrs, state) {
  * Upsert an object.
  * @public
  * @example
- *  upsert(
- *    'obj_name',
- *    'ext_id',
- *    {
- *      attr1: "foo",
- *      attr2: "bar"
- *    },
- *    state)
+ *  upsert('obj_name', 'ext_id', {
+ *    attr1: "foo",
+ *    attr2: "bar"
+ *  })
  * @function
  * @param {String} sObject - API name of the sObject.
  * @param {String} externalId - ID.
@@ -161,15 +147,10 @@ export const upsert = curry(function(sObject, externalId, attrs, state) {
  * Upsert if conditions are met.
  * @public
  * @example
- *  upsert(
- *    true,
- *    'obj_name',
- *    'ext_id',
- *    {
- *      attr1: "foo",
- *      attr2: "bar"
- *    },
- *    state)
+ *  upsert(true, 'obj_name', 'ext_id', {
+ *    attr1: "foo",
+ *    attr2: "bar"
+ *  })
  * @function
  * @param {boolean} logical - a logical statement that will be evaluated.
  * @param {String} sObject - API name of the sObject.
@@ -209,13 +190,10 @@ export const upsertIf = curry(function(logical, sObject, externalId, attrs, stat
  * Update an object.
  * @public
  * @example
- *  update(
- *    'obj_name',
- *    {
- *      attr1: "foo",
- *      attr2: "bar"
- *    },
- *    state)
+ *  update('obj_name', {
+ *    attr1: "foo",
+ *    attr2: "bar"
+ *  })
  * @function
  * @param {String} sObject - API name of the sObject.
  * @param {Object} attrs - Field attributes for the new object.
@@ -240,6 +218,8 @@ export const update = curry(function(sObject, attrs, state) {
 /**
  * Get a reference ID by an index.
  * @public
+ * @example
+ *  reference(0)
  * @function
  * @param {number} position - Position for references array.
  * @param {State} state - Array of references.
