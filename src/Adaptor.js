@@ -147,7 +147,7 @@ export const upsert = curry(function(sObject, externalId, attrs, state) {
  * Upsert if conditions are met.
  * @public
  * @example
- *  upsert(true, 'obj_name', 'ext_id', {
+ *  upsertIf(true, 'obj_name', 'ext_id', {
  *    attr1: "foo",
  *    attr2: "bar"
  *  })
