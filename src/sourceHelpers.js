@@ -3,11 +3,12 @@ import { sourceValue, field } from 'language-common';
 
 /**
  * Adds a lookup or 'dome insert' to a record.
- * @example <caption>Example</caption>
- * lookup("relationship_name__r", "externalID on related object", "$.path")
- * @constructor
+ * @public
+ * @example
+ *  lookup("relationship_name__r", "externalID on related object", "$.path")
+ * @function
  * @param {string} relationshipName - `__r` relationship field on the record.
- * @param {string} externalID - Salesforce ExternalID field.
+ * @param {string} externalId - Salesforce ExternalID field.
  * @param {string} path - JSONPath to data source.
  * @returns {object}
  */
@@ -20,13 +21,15 @@ export function lookup(relationshipName, externalId, path) {
 
 /**
  * Adds a lookup or 'dome insert' to a record.
- * @example <caption>Data Sourced Value</caption>
- * relationship("relationship_name__r", "externalID on related object", dataSource("path"))
- * @example <caption>Fixed Value</caption>
- * relationship("relationship_name__r", "externalID on related object", "hello world") 
- * @constructor
+ * @public
+ * @example
+ * Data Sourced Value:
+ *  relationship("relationship_name__r", "externalID on related object", dataSource("path"))
+ * Fixed Value:
+ *  relationship("relationship_name__r", "externalID on related object", "hello world")
+ * @function
  * @param {string} relationshipName - `__r` relationship field on the record.
- * @param {string} externalID - Salesforce ExternalID field.
+ * @param {string} externalId - Salesforce ExternalID field.
  * @param {string} dataSource - resolvable source.
  * @returns {object}
  */
