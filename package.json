@@ -1,6 +1,6 @@
 {
   "name": "language-salesforce",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Salesforce Language Pack for OpenFn",
   "main": "lib/index.js",
   "scripts": {
@@ -20,7 +20,7 @@
   "dependencies": {
     "JSONPath": "^0.10.0",
     "jsforce": "1.5.1",
-    "language-common": "github:openfn/language-common#v0.0.5",
+    "language-common": "github:openfn/language-common#v0.3.0",
     "lodash-fp": "^0.10.2",
     "mustache": "^2.2.0",
     "yargs": "^3.30.0"
