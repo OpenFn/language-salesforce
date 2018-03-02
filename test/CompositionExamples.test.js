@@ -42,28 +42,19 @@ describe("Composition Examples", () => {
         each(
           "$.data.data[*].rpt_boats[*]",
           combine(
-            create(
-              "Boat",
-              fields(
-                field(
-                  "fisher_name",
-                  sourceValue("$.data.fisher_name")
-                ),
-                field(
-                  "boat_owner_manual",
-                  sourceValue("$.data.boat_owner_manual")
-                )
-              )
-            ),
+            create("Boat", fields(
+              field("fisher_name", sourceValue("$.data.fisher_name")),
+              field("boat_owner_manual", sourceValue("$.data.boat_owner_manual"))
+            )),
             each(
               join("$.data.rpt_catch[*]", "$.references.[0].id", "id"),
               combine(
                 create(
-                  "Catch", 
+                  "Catch",
                   fields(
                     field(
                       "selected_specie_label",
-                      sourceValue("$.data.selected_specie_label") 
+                      sourceValue("$.data.selected_specie_label")
                     ),
                     field(
                       "BoatID", sourceValue("$.data.id")
@@ -175,4 +166,3 @@ describe("Composition Examples", () => {
   })
 
 })
-

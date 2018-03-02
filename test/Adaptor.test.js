@@ -41,7 +41,29 @@ describe("Adaptor", () => {
 
   describe("createIf", () => {
 
-    it("doesn't create a new sObject if a logical is false")
+    it("doesn't create a new sObject if a logical is false", (done) => {
+
+      const fakeConnection = {
+        create: function() {
+          return Promise.resolve({Id: 10})
+        }
+      };
+      let state = { connection: fakeConnection, references: [] };
+
+      let logical = 1 + 1 == 3;
+
+      let sObject = "myObject";
+      let fields = { field: "value" };
+
+      let spy = sinon.spy(fakeConnection, "create");
+
+      createIf(logical, sObject, fields, state);
+
+      expect(spy.called).to.eql(false);
+      expect(state).to.eql({ connection: fakeConnection, references: [] })
+      done()
+
+    })
 
     it("makes a new sObject if a logical is true", (done) => {
 
@@ -150,15 +172,9 @@ describe("Adaptor", () => {
         steps(
           each(
             "$.data.store.book[*]",
-            create(
-              "Book",
-              fields(
-                field(
-                  "title",
-                  sourceValue("$.data.title")
-                )
-              )
-            )
+            create("Book", fields(
+              field("title", sourceValue("$.data.title"))
+            ))
           )
         )
       )
