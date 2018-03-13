@@ -33,6 +33,32 @@ function create(sObject, fields) {
   }
 }
 
+function createIf(logical, sObject, fields) {
+
+  return (state) => {
+
+    if (logical) {
+
+      state.logger.debug(`Creating ${sObject}`)
+      state.logger.debug(JSON.stringify(state.data, null, 2))
+      state.logger.debug("===================")
+
+      let id = state.references.length + 1
+      let result = {sObject, fields: expandReferences(fields, state), id}
+
+      return {
+        ...state,
+        references: [result, ...state.references]
+      }
+
+    } else {
+      console.info(`Not upserting ${sObject} because logical is false.`);
+      return state;
+    }
+
+  }
+}
+
 function update(sObject, fields) {
 
   return (state) => {
@@ -67,6 +93,33 @@ function upsert(sObject, externalId, fields) {
       ...state,
       references: [result, ...state.references]
     }
+
+  }
+}
+
+function upsertIf(logical, sObject, externalId, fields) {
+
+  return (state) => {
+
+    if (logical) {
+
+      state.logger.debug(`Upserting ${sObject} with externalId:`, externalId)
+      state.logger.debug(JSON.stringify(state.data, null, 2))
+      state.logger.debug("===================")
+
+      let id = state.references.length + 1
+      let result = {sObject, fields: expandReferences(fields, state), id}
+
+      return {
+        ...state,
+        references: [result, ...state.references]
+      }
+
+    } else {
+      console.info(`Not upserting ${sObject} because logical is false.`);
+      return state;
+    }
+
 
   }
 }
@@ -115,11 +168,13 @@ function execute(...operations) {
 
 export {
   create,
+  createIf,
   execute,
   reference,
   steps,
   update,
-  upsert
+  upsert,
+  upsertIf
 }
 
 export { lookup, relationship } from './sourceHelpers';
