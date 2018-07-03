@@ -42,6 +42,81 @@ export const describe = curry(function(sObject, state) {
 
 });
 
+export const query = curry(function(qs, state) {
+  let {connection, references} = state;
+
+  return connection.query(qs, function(err, result) {
+    if (err) { return console.error(err); }
+
+    console.log(result);
+
+    return {
+      ...state, references: [result, ...state.references]
+    }
+
+  });
+
+});
+
+/**
+ * Create and execute a bulk job.
+ * @public
+ * @example
+ *  bulkOperation('obj_name', 'operation', {options}, [
+ *    { attr1: "foo" },
+ *    { attr1: "bar" },
+ *  ]);
+ * @function
+ * @param {String} sObject - API name of the sObject.
+ * @param {Object} fun - array of objects with field attributes.
+ * @param {State} state - Runtime state.
+ * @returns {Operation}
+ */
+export const bulk = curry(function(sObject, operation, options, fun, state) {
+  let {connection, references} = state;
+  const finalAttrs = fun(state);
+
+  console.info(`Creating bulk ${operation} job for ${sObject}`, finalAttrs);
+  const job = connection.bulk.createJob(sObject, operation, options);
+
+  console.info('Creating batch for job.');
+  var batch = job.createBatch();
+
+  console.info('Executing batch.');
+  batch.execute(finalAttrs);
+
+  return batch.on("queue", function(batchInfo) {
+
+    console.info(batchInfo);
+    const batchId = batchInfo.id;
+    var batch = job.batch(batchId);
+
+    batch.on('error', function(err) {
+      console.error("Request error:");
+      throw err;
+    });
+
+    batch.poll(3 * 1000, 120 * 1000);
+
+  }).then((res) => {
+
+    const errors = res.filter(item => {
+      return item.success === false
+    })
+
+    if (options.failOnError && errors.length > 0) {
+      console.error("Errors detected:");
+      throw res;
+    } else {
+      console.log('Result : ' + JSON.stringify(res, null, 2));
+      return {
+        ...state, references: [res, ...state.references]
+      }
+    }
+  })
+
+});
+
 /**
  * Create a new object.
  * @public
@@ -347,6 +422,14 @@ function expandReferences(state, attrs) {
   return mapValues(function(value) {
     return typeof value == 'function' ? value(state) : value;
   })(attrs);
+}
+
+function commonExpandReferences(obj) {
+  return state => {
+    return mapValues(function(value) {
+      return typeof value == 'function' ? value(state) : value;
+    })(obj);
+  }
 }
 
 export { lookup, relationship } from './sourceHelpers';
