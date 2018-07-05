@@ -437,14 +437,6 @@ function expandReferences(state, attrs) {
   })(attrs);
 }
 
-function commonExpandReferences(obj) {
-  return state => {
-    return mapValues(function(value) {
-      return typeof value == 'function' ? value(state) : value;
-    })(obj);
-  }
-}
-
 export { lookup, relationship } from './sourceHelpers';
 
 export {
