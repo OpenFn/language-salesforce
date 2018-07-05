@@ -73,8 +73,8 @@ export const query = curry(function(qs, state) {
  * @public
  * @example
  *  bulk('Patient__c', 'insert', { failOnError: true }, state => {
- *    return state.data.someArray.map(item => {
- *      return { 'Age__c': f.age, 'Name': f.name }
+ *    return state.data.someArray.map(x => {
+ *      return { 'Age__c': x.age, 'Name': x.name }
  *    })
  *  });
  * @function
