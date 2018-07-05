@@ -42,6 +42,16 @@ export const describe = curry(function(sObject, state) {
 
 });
 
+/**
+ * Execute an SOQL query.
+ * @public
+ * @example
+ *  query(`SELECT Id FROM Patient__c WHERE Health_ID__c = '${state.data.field1}'`);
+ * @function
+ * @param {String} qs - A query string.
+ * @param {State} state - Runtime state.
+ * @returns {Operation}
+ */
 export const query = curry(function(qs, state) {
   let {connection, references} = state;
 
