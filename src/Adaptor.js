@@ -72,13 +72,16 @@ export const query = curry(function(qs, state) {
  * Create and execute a bulk job.
  * @public
  * @example
- *  bulkOperation('obj_name', 'operation', {options}, [
- *    { attr1: "foo" },
- *    { attr1: "bar" },
- *  ]);
+ *  bulk('Patient__c', 'insert', { failOnError: true }, state => {
+ *    return state.data.someArray.map(item => {
+ *      return { 'Age__c': f.age, 'Name': f.name }
+ *    })
+ *  });
  * @function
  * @param {String} sObject - API name of the sObject.
- * @param {Object} fun - array of objects with field attributes.
+ * @param {String} operation - API name of the sObject.
+ * @param {String} options - API name of the sObject.
+ * @param {Function} fun - A function which takes state and returns an array.
  * @param {State} state - Runtime state.
  * @returns {Operation}
  */
