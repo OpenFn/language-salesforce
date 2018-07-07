@@ -86,8 +86,14 @@ export const query = curry(function(qs, state) {
  * @returns {Operation}
  */
 export const bulk = curry(function(sObject, operation, options, fun, state) {
-  let {connection, references} = state;
+  let { connection, references } = state;
+  let { failOnError, allowNoOp } = options;
   const finalAttrs = fun(state);
+
+  if (allowNoOp && finalAttrs.length === 0) {
+    console.info(`No items in ${sObject} array. Skipping bulk ${operation} operation.`)
+    return state;
+  }
 
   console.info(`Creating bulk ${operation} job for ${sObject}`, finalAttrs);
   const job = connection.bulk.createJob(sObject, operation, options);
@@ -117,7 +123,7 @@ export const bulk = curry(function(sObject, operation, options, fun, state) {
       return item.success === false
     })
 
-    if (options.failOnError && errors.length > 0) {
+    if (failOnError && errors.length > 0) {
       console.error("Errors detected:");
       throw res;
     } else {
