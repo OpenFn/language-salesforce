@@ -37,9 +37,10 @@ function bulk(sObject, operation, options, fnReturningArray) {
 
   return (state) => {
 
-    state.logger.debug(`Performing bulk ${operation} for ${sObject} \nwith options: ${options}`)
-    state.logger.debug(JSON.stringify(state.data, null, 2))
-    state.logger.debug("===================")
+    const opts = JSON.stringify(options, null, 2)
+
+    state.logger.debug(`Performing bulk ${operation} for ${sObject} \nwith options: ${opts}`)
+    state.logger.debug("======================================================")
 
     let id = state.references.length + 1
     let result = { sObject, records: fnReturningArray(state), id }
