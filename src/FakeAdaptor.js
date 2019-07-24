@@ -33,6 +33,25 @@ function create(sObject, fields) {
   }
 }
 
+function bulk(sObject, operation, options, fnReturningArray) {
+
+  return (state) => {
+
+    state.logger.debug(`Performing bulk ${operation} for ${sObject} \nwith options: ${options}`)
+    state.logger.debug(JSON.stringify(state.data, null, 2))
+    state.logger.debug("===================")
+
+    let id = state.references.length + 1
+    let result = { sObject, records: fnReturningArray(state), id }
+
+    return {
+      ...state,
+      references: [result, ...state.references]
+    }
+
+  }
+}
+
 function createIf(logical, sObject, fields) {
 
   return (state) => {
@@ -167,6 +186,7 @@ function execute(...operations) {
 
 
 export {
+  bulk,
   create,
   createIf,
   execute,
@@ -174,7 +194,7 @@ export {
   steps,
   update,
   upsert,
-  upsertIf
+  upsertIf,
 }
 
 export { lookup, relationship } from './sourceHelpers';
