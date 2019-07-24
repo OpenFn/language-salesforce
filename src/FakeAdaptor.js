@@ -33,7 +33,7 @@ function create(sObject, fields) {
   }
 }
 
-function bulk(sObject, operation, options, fnReturningArray) {
+function bulk(sObject, operation, options, fun) {
 
   return (state) => {
 
@@ -42,8 +42,7 @@ function bulk(sObject, operation, options, fnReturningArray) {
     state.logger.debug(`Performing bulk ${operation} for ${sObject} \nwith options: ${opts}`)
     state.logger.debug("======================================================")
 
-    let id = state.references.length + 1
-    let result = { sObject, records: fnReturningArray(state), id }
+    let result = { sObject, operation, options, records: fun(state)}
 
     return {
       ...state,
