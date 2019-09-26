@@ -143,6 +143,31 @@ function upsertIf(logical, sObject, externalId, fields) {
   }
 }
 
+function query(qs, state) {
+  let {connection, references} = state;
+
+  const response = {
+    records: [
+      {Id: 1},
+      {Id: 2},
+      {Id: 4},
+    ]
+  }
+
+  state.logger.debug(`Executing query ${qs}.`)
+  state.logger.debug("===================")
+  state.logger.debug(`Returning arbitrary result: ${JSON.stringify(response, null, 2)}`);
+
+  let id = state.references.length + 1
+  let result = {sObject, fields: expandReferences(fields, state), id}
+
+  return {
+    ...state,
+    references: [result, ...state.references]
+  }
+
+};
+
 
 const reference = curry(function(position, {references}) {
   return references[position].id;
@@ -195,6 +220,7 @@ export {
   update,
   upsert,
   upsertIf,
+  query
 }
 
 export { lookup, relationship } from './sourceHelpers';
