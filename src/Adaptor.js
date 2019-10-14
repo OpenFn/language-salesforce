@@ -112,11 +112,14 @@ export const bulk = curry(function(sObject, operation, options, fun, state) {
 
     batch.on('error', function(err) {
       console.error("Request error:");
+      batch.close()
       throw err;
     });
 
     batch.poll(3 * 1000, 120 * 1000);
-
+    batch.on("response", () => {
+      batch.close()
+    })
   }).then((res) => {
 
     const errors = res.filter(item => {
