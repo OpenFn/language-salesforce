@@ -111,6 +111,7 @@ export const bulk = curry(function(sObject, operation, options, fun, state) {
     var batch = job.batch(batchId);
 
     batch.on('error', function(err) {
+      job.close();
       console.error("Request error:");
       throw err;
     });
@@ -118,7 +119,7 @@ export const bulk = curry(function(sObject, operation, options, fun, state) {
     batch.poll(3 * 1000, 120 * 1000);
 
   }).then((res) => {
-
+    job.close();
     const errors = res.filter(item => {
       return item.success === false
     })
