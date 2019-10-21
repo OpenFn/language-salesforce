@@ -3,6 +3,10 @@ language-salesforce [![Build Status](https://travis-ci.org/OpenFn/language-sales
 
 Salesforce Language Pack for OpenFn
 
+## Release notes and deprecated CHANGELOG.md
+See [releases](https://github.com/OpenFn/language-salesforce/releases) for all
+changes.
+
 Intent
 ------
 
