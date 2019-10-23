@@ -358,6 +358,12 @@ function login(state) {
   console.info(`Logging in as ${username}.`);
 
   return connection.login( username, password + securityToken )
+    // NOTE: Uncomment this to debug connection issues.
+    // .then(response => {
+    //   console.log(connection);
+    //   console.log(response);
+    //   return state;
+    // })
     .then(() => state)
 
 }

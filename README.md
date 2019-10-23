@@ -74,3 +74,16 @@ Clone the repo, run `npm install`.
 Run tests using `npm run test` or `npm run test:watch`
 
 Build the project using `make`.
+
+Other
+-----
+Create SOAP session
+```sh
+curl https://test.salesforce.com/services/Soap/u/47.0 -H "Content-Type: text/xml; charset=UTF-8" -H "SOAPAction: login" -d @tmp/login.txt | xmllint --format -
+```
+
+Close jobs
+```sh
+curl
+https://openfn.my.salesforce.com/services/async/47.0/job/some_id -H 'X-SFDC-Session: abc123sessionID456xyz' -H "Content-Type: application/xml; charset=UTF-8" -d @tmp/close_job.txt | xmllint --format -
+```
