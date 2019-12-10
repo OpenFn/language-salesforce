@@ -54,6 +54,7 @@ export const describe = curry(function(sObject, state) {
  */
 export const query = curry(function(qs, state) {
   let {connection, references} = state;
+  console.log(`Executing query: ${qs}`);
 
   return connection.query(qs, function(err, result) {
     if (err) { return console.error(err); }
@@ -63,7 +64,6 @@ export const query = curry(function(qs, state) {
     return {
       ...state, references: [result, ...state.references]
     }
-
   });
 
 });
