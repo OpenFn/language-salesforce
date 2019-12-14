@@ -19,7 +19,7 @@
   ],
   "dependencies": {
     "JSONPath": "^0.10.0",
-    "jsforce": "1.9.0",
+    "jsforce": "^1.9.3",
     "language-common": "github:openfn/language-common#v0.3.0",
     "lodash-fp": "^0.10.2",
     "mustache": "^2.2.0",
