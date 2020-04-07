@@ -4,4 +4,3 @@ node_js:
 - lts/*  # Most recent LTS version, i.e. 12 in October, 2019
 - 10     # Explicitly include an active LTS version
 - 8      # Explicitly include the maintenance LTS version
-- 6
