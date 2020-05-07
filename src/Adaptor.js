@@ -43,6 +43,32 @@ export const describe = curry(function(sObject, state) {
 });
 
 /**
+ * Outputs basic information about available Salesforce objects.
+ * @public
+ * @example
+ *  describe();
+ * @function
+ * @param {State} state - Runtime state.
+ * @returns {State}
+ */
+export const describeGlobal = curry(function(sObject, state) {
+  let {connection} = state;
+
+  return connection.describeGlobal()
+  .then(function(res) {
+    console.log('Num of SObjects : ' + res.sobjects.length);
+    console.log(JSON.stringify(res.sobjects, null, 2));
+
+    return state;
+  })
+  .catch(function(err) {
+    console.error(err);
+    return err;
+  })
+
+});
+
+/**
  * Execute an SOQL query.
  * @public
  * @example
