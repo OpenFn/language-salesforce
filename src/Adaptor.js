@@ -29,13 +29,13 @@ export const describe = curry(function(sObject, state) {
   let {connection} = state;
 
   return connection.sobject(sObject).describe()
-  .then(function(meta) {
+  .then(meta => {
     console.log('Label : ' + meta.label);
     console.log('Num of Fields : ' + meta.fields.length);
 
     return state;
   })
-  .catch(function(err) {
+  .catch(err => {
     console.error(err);
     return err;
   })
@@ -55,13 +55,13 @@ export const describeGlobal = curry(function(sObject, state) {
   let {connection} = state;
 
   return connection.describeGlobal()
-  .then(function(res) {
+  .then(res => {
     console.log('Num of SObjects : ' + res.sobjects.length);
     console.log(JSON.stringify(res.sobjects, null, 2));
 
     return state;
   })
-  .catch(function(err) {
+  .catch(err => {
     console.error(err);
     return err;
   })
@@ -144,7 +144,7 @@ export const bulk = curry(function(sObject, operation, options, fun, state) {
 
     batch.poll(3 * 1000, 120 * 1000);
 
-  }).then((res) => {
+  }).then(res => {
     job.close();
     const errors = res.filter(item => {
       return item.success === false
@@ -160,6 +160,10 @@ export const bulk = curry(function(sObject, operation, options, fun, state) {
       }
     }
   })
+  .catch(error => {
+    console.log(error);
+    reject(error);
+  });
 
 });
 
@@ -183,13 +187,16 @@ export const create = curry(function(sObject, attrs, state) {
   console.info(`Creating ${sObject}`, finalAttrs);
 
   return connection.create(sObject, finalAttrs)
-  .then(function(recordResult) {
+  .then(recordResult => {
     console.log('Result : ' + JSON.stringify(recordResult));
     return {
       ...state, references: [recordResult, ...state.references]
     }
   })
-
+  .catch(error => {
+    console.log(error);
+    reject(error);
+  });
 });
 
 /**
@@ -218,12 +225,16 @@ export const createIf = curry(function(logical, sObject, attrs, state) {
 
   if (logical) {
     return connection.create(sObject, finalAttrs)
-    .then(function(recordResult) {
+    .then(recordResult => {
       console.log('Result : ' + JSON.stringify(recordResult));
       return {
         ...state, references: [recordResult, ...state.references]
       }
     })
+    .catch(error => {
+      console.log(error);
+      reject(error);
+    });
   } else {
     return {
       ...state
@@ -255,13 +266,17 @@ export const upsert = curry(function(sObject, externalId, attrs, state) {
   );
 
   return connection.upsert(sObject, finalAttrs, externalId)
-  .then(function(recordResult) {
-    console.log('Result : ' + JSON.stringify(recordResult));
+  .then(recordResult => {
+    console.log("Result : " + JSON.stringify(recordResult));
     return {
-      ...state, references: [recordResult, ...state.references]
-    }
+      ...state,
+      references: [recordResult, ...state.references],
+    };
   })
-
+  .catch(error => {
+    console.log(error);
+    reject(error);
+  });
 })
 
 /**
@@ -293,12 +308,16 @@ export const upsertIf = curry(function(logical, sObject, externalId, attrs, stat
 
   if (logical) {
     return connection.upsert(sObject, finalAttrs, externalId)
-    .then(function(recordResult) {
+    .then(recordResult => {
       console.log('Result : ' + JSON.stringify(recordResult));
       return {
         ...state, references: [recordResult, ...state.references]
       }
     })
+    .catch(error => {
+      console.log(error);
+      reject(error);
+    });
   } else {
     return {
       ...state
@@ -327,12 +346,16 @@ export const update = curry(function(sObject, attrs, state) {
   console.info(`Updating ${sObject}`, finalAttrs);
 
   return connection.update(sObject, finalAttrs)
-  .then(function(recordResult) {
+  .then(recordResult => {
     console.log('Result : ' + JSON.stringify(recordResult));
     return {
       ...state, references: [recordResult, ...state.references]
     }
   })
+  .catch(error => {
+    console.log(error);
+    reject(error);
+  });
 
 });
 
@@ -391,7 +414,10 @@ function login(state) {
     //   return state;
     // })
     .then(() => state)
-
+    .catch(error => {
+      console.log(error);
+      reject(error);
+    });
 }
 
 /**
