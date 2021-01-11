@@ -21,7 +21,9 @@
     "JSONPath": "^0.10.0",
     "jsforce": "^1.9.3",
     "language-common": "github:openfn/language-common#v0.3.0",
+    "language-http": "github:openfn/language-http#master",
     "lodash-fp": "^0.10.2",
+    "axios": "^0.21.1",
     "mustache": "^2.2.0",
     "yargs": "^3.30.0"
   },

@@ -1,15 +1,17 @@
+import axios from 'axios';
+
 /** @module Adaptor */
 
 /**
-* @typedef {Object} State
-* @property {object} data JSON Data.
-* @property {Array<Reference>} references History of all previous operations.
-*/
+ * @typedef {Object} State
+ * @property {object} data JSON Data.
+ * @property {Array<Reference>} references History of all previous operations.
+ */
 
 /**
-* @typedef {Function} Operation
-* @param {State} state
-*/
+ * @typedef {Function} Operation
+ * @param {State} state
+ */
 
 import { execute as commonExecute } from 'language-common';
 import jsforce from 'jsforce';
@@ -25,21 +27,25 @@ import { curry, mapValues, flatten } from 'lodash-fp';
  * @param {State} state - Runtime state.
  * @returns {State}
  */
-export const describe = curry(function(sObject, state) {
-  let {connection} = state;
+export const describe = curry(function (sObject, state) {
+  let { connection } = state;
 
-  return connection.sobject(sObject).describe()
-  .then(function(meta) {
-    console.log('Label : ' + meta.label);
-    console.log('Num of Fields : ' + meta.fields.length);
+  return connection
+    .sobject(sObject)
+    .describe()
+    .then((result) => {
+      console.log('Label : ' + result.label);
+      console.log('Num of Fields : ' + result.fields.length);
 
-    return state;
-  })
-  .catch(function(err) {
-    console.error(err);
-    return err;
-  })
-
+      return {
+        ...state,
+        references: [result, ...state.references],
+      };
+    })
+    .catch(function (err) {
+      console.error(err);
+      return err;
+    });
 });
 
 /**
@@ -51,21 +57,51 @@ export const describe = curry(function(sObject, state) {
  * @param {State} state - Runtime state.
  * @returns {State}
  */
-export const describeGlobal = curry(function(sObject, state) {
-  let {connection} = state;
+export const describeGlobal = curry(function (sObject, state) {
+  let { connection } = state;
 
-  return connection.describeGlobal()
-  .then(function(res) {
-    console.log('Num of SObjects : ' + res.sobjects.length);
-    console.log(JSON.stringify(res.sobjects, null, 2));
+  return connection
+    .describeGlobal()
+    .then((result) => {
+      console.log('Num of SObjects : ' + result.sobjects.length);
+      console.log(JSON.stringify(result.sobjects, null, 2));
 
-    return state;
-  })
-  .catch(function(err) {
-    console.error(err);
-    return err;
-  })
+      return {
+        ...state,
+        references: [result, ...state.references],
+      };
+    })
+    .catch(function (err) {
+      console.error(err);
+      return err;
+    });
+});
 
+/**
+ * Retrieves a Salesforce sObject(s).
+ * @public
+ * @example
+ *  retrieve('ContentVersion', '0684K0000020Au7QAE/VersionData');
+ * @function
+ * @param {State} state - Runtime state.
+ * @returns {State}
+ */
+export const retrieve = curry(function (sObject, id, state) {
+  let { connection } = state;
+
+  return connection
+    .sobject(sObject)
+    .retrieve(id)
+    .then((result) => {
+      return {
+        ...state,
+        references: [result, ...state.references],
+      };
+    })
+    .catch(function (err) {
+      console.error(err);
+      return err;
+    });
 });
 
 /**
@@ -78,20 +114,22 @@ export const describeGlobal = curry(function(sObject, state) {
  * @param {State} state - Runtime state.
  * @returns {Operation}
  */
-export const query = curry(function(qs, state) {
-  let {connection, references} = state;
+export const query = curry(function (qs, state) {
+  let { connection, references } = state;
   console.log(`Executing query: ${qs}`);
 
-  return connection.query(qs, function(err, result) {
-    if (err) { return console.error(err); }
+  return connection.query(qs, function (err, result) {
+    if (err) {
+      return console.error(err);
+    }
 
     console.log(result);
 
     return {
-      ...state, references: [result, ...state.references]
-    }
+      ...state,
+      references: [result, ...state.references],
+    };
   });
-
 });
 
 /**
@@ -111,13 +149,15 @@ export const query = curry(function(qs, state) {
  * @param {State} state - Runtime state.
  * @returns {Operation}
  */
-export const bulk = curry(function(sObject, operation, options, fun, state) {
+export const bulk = curry(function (sObject, operation, options, fun, state) {
   let { connection, references } = state;
   let { failOnError, allowNoOp } = options;
   const finalAttrs = fun(state);
 
   if (allowNoOp && finalAttrs.length === 0) {
-    console.info(`No items in ${sObject} array. Skipping bulk ${operation} operation.`)
+    console.info(
+      `No items in ${sObject} array. Skipping bulk ${operation} operation.`
+    );
     return state;
   }
 
@@ -130,37 +170,37 @@ export const bulk = curry(function(sObject, operation, options, fun, state) {
   console.info('Executing batch.');
   batch.execute(finalAttrs);
 
-  return batch.on("queue", function(batchInfo) {
+  return batch
+    .on('queue', function (batchInfo) {
+      console.info(batchInfo);
+      const batchId = batchInfo.id;
+      var batch = job.batch(batchId);
 
-    console.info(batchInfo);
-    const batchId = batchInfo.id;
-    var batch = job.batch(batchId);
+      batch.on('error', function (err) {
+        job.close();
+        console.error('Request error:');
+        throw err;
+      });
 
-    batch.on('error', function(err) {
-      job.close();
-      console.error("Request error:");
-      throw err;
-    });
-
-    batch.poll(3 * 1000, 120 * 1000);
-
-  }).then((res) => {
-    job.close();
-    const errors = res.filter(item => {
-      return item.success === false
+      batch.poll(3 * 1000, 120 * 1000);
     })
+    .then((res) => {
+      job.close();
+      const errors = res.filter((item) => {
+        return item.success === false;
+      });
 
-    if (failOnError && errors.length > 0) {
-      console.error("Errors detected:");
-      throw res;
-    } else {
-      console.log('Result : ' + JSON.stringify(res, null, 2));
-      return {
-        ...state, references: [res, ...state.references]
+      if (failOnError && errors.length > 0) {
+        console.error('Errors detected:');
+        throw res;
+      } else {
+        console.log('Result : ' + JSON.stringify(res, null, 2));
+        return {
+          ...state,
+          references: [res, ...state.references],
+        };
       }
-    }
-  })
-
+    });
 });
 
 /**
@@ -177,19 +217,18 @@ export const bulk = curry(function(sObject, operation, options, fun, state) {
  * @param {State} state - Runtime state.
  * @returns {Operation}
  */
-export const create = curry(function(sObject, attrs, state) {
-  let {connection, references} = state;
-  const finalAttrs = expandReferences(state, attrs)
+export const create = curry(function (sObject, attrs, state) {
+  let { connection, references } = state;
+  const finalAttrs = expandReferences(state, attrs);
   console.info(`Creating ${sObject}`, finalAttrs);
 
-  return connection.create(sObject, finalAttrs)
-  .then(function(recordResult) {
+  return connection.create(sObject, finalAttrs).then(function (recordResult) {
     console.log('Result : ' + JSON.stringify(recordResult));
     return {
-      ...state, references: [recordResult, ...state.references]
-    }
-  })
-
+      ...state,
+      references: [recordResult, ...state.references],
+    };
+  });
 });
 
 /**
@@ -207,29 +246,28 @@ export const create = curry(function(sObject, attrs, state) {
  * @param {State} state - Runtime state.
  * @returns {Operation}
  */
-export const createIf = curry(function(logical, sObject, attrs, state) {
-  let {connection, references} = state;
-  const finalAttrs = expandReferences(state, attrs)
+export const createIf = curry(function (logical, sObject, attrs, state) {
+  let { connection, references } = state;
+  const finalAttrs = expandReferences(state, attrs);
   if (logical) {
     console.info(`Creating ${sObject}`, finalAttrs);
   } else {
     console.info(`Not creating ${sObject} because logical is false.`);
-  };
-
-  if (logical) {
-    return connection.create(sObject, finalAttrs)
-    .then(function(recordResult) {
-      console.log('Result : ' + JSON.stringify(recordResult));
-      return {
-        ...state, references: [recordResult, ...state.references]
-      }
-    })
-  } else {
-    return {
-      ...state
-    }
   }
 
+  if (logical) {
+    return connection.create(sObject, finalAttrs).then(function (recordResult) {
+      console.log('Result : ' + JSON.stringify(recordResult));
+      return {
+        ...state,
+        references: [recordResult, ...state.references],
+      };
+    });
+  } else {
+    return {
+      ...state,
+    };
+  }
 });
 
 /**
@@ -247,22 +285,26 @@ export const createIf = curry(function(logical, sObject, attrs, state) {
  * @param {State} state - Runtime state.
  * @returns {Operation}
  */
-export const upsert = curry(function(sObject, externalId, attrs, state) {
-  let {connection, references} = state;
-  const finalAttrs = expandReferences(state, attrs)
+export const upsert = curry(function (sObject, externalId, attrs, state) {
+  let { connection, references } = state;
+  const finalAttrs = expandReferences(state, attrs);
   console.info(
-    `Upserting ${sObject} with externalId`, externalId, ":" , finalAttrs
+    `Upserting ${sObject} with externalId`,
+    externalId,
+    ':',
+    finalAttrs
   );
 
-  return connection.upsert(sObject, finalAttrs, externalId)
-  .then(function(recordResult) {
-    console.log('Result : ' + JSON.stringify(recordResult));
-    return {
-      ...state, references: [recordResult, ...state.references]
-    }
-  })
-
-})
+  return connection
+    .upsert(sObject, finalAttrs, externalId)
+    .then(function (recordResult) {
+      console.log('Result : ' + JSON.stringify(recordResult));
+      return {
+        ...state,
+        references: [recordResult, ...state.references],
+      };
+    });
+});
 
 /**
  * Upsert if conditions are met.
@@ -280,31 +322,41 @@ export const upsert = curry(function(sObject, externalId, attrs, state) {
  * @param {State} state - Runtime state.
  * @returns {Operation}
  */
-export const upsertIf = curry(function(logical, sObject, externalId, attrs, state) {
-  let {connection, references} = state;
-  const finalAttrs = expandReferences(state, attrs)
+export const upsertIf = curry(function (
+  logical,
+  sObject,
+  externalId,
+  attrs,
+  state
+) {
+  let { connection, references } = state;
+  const finalAttrs = expandReferences(state, attrs);
   if (logical) {
     console.info(
-      `Upserting ${sObject} with externalId`, externalId, ":" , finalAttrs
+      `Upserting ${sObject} with externalId`,
+      externalId,
+      ':',
+      finalAttrs
     );
   } else {
     console.info(`Not upserting ${sObject} because logical is false.`);
-  };
-
-  if (logical) {
-    return connection.upsert(sObject, finalAttrs, externalId)
-    .then(function(recordResult) {
-      console.log('Result : ' + JSON.stringify(recordResult));
-      return {
-        ...state, references: [recordResult, ...state.references]
-      }
-    })
-  } else {
-    return {
-      ...state
-    }
   }
 
+  if (logical) {
+    return connection
+      .upsert(sObject, finalAttrs, externalId)
+      .then(function (recordResult) {
+        console.log('Result : ' + JSON.stringify(recordResult));
+        return {
+          ...state,
+          references: [recordResult, ...state.references],
+        };
+      });
+  } else {
+    return {
+      ...state,
+    };
+  }
 });
 
 /**
@@ -321,19 +373,18 @@ export const upsertIf = curry(function(logical, sObject, externalId, attrs, stat
  * @param {State} state - Runtime state.
  * @returns {Operation}
  */
-export const update = curry(function(sObject, attrs, state) {
-  let {connection, references} = state;
-  const finalAttrs = expandReferences(state, attrs)
+export const update = curry(function (sObject, attrs, state) {
+  let { connection, references } = state;
+  const finalAttrs = expandReferences(state, attrs);
   console.info(`Updating ${sObject}`, finalAttrs);
 
-  return connection.update(sObject, finalAttrs)
-  .then(function(recordResult) {
+  return connection.update(sObject, finalAttrs).then(function (recordResult) {
     console.log('Result : ' + JSON.stringify(recordResult));
     return {
-      ...state, references: [recordResult, ...state.references]
-    }
-  })
-
+      ...state,
+      references: [recordResult, ...state.references],
+    };
+  });
 });
 
 /**
@@ -346,10 +397,10 @@ export const update = curry(function(sObject, attrs, state) {
  * @param {State} state - Array of references.
  * @returns {State}
  */
-export const reference = curry(function(position, state) {
+export const reference = curry(function (position, state) {
   const { references } = state;
   return references[position].id;
-})
+});
 
 /**
  * Creates a connection.
@@ -363,10 +414,10 @@ function createConnection(state) {
   const { loginUrl } = state.configuration;
 
   if (!loginUrl) {
-    throw new Error("loginUrl missing from configuration.")
+    throw new Error('loginUrl missing from configuration.');
   }
 
-  return { ...state, connection: new jsforce.Connection({ loginUrl }) }
+  return { ...state, connection: new jsforce.Connection({ loginUrl }) };
 }
 
 /**
@@ -378,20 +429,21 @@ function createConnection(state) {
  * @returns {State}
  */
 function login(state) {
-
-  const {username, password, securityToken} = state.configuration
+  const { username, password, securityToken } = state.configuration;
   let { connection } = state;
   console.info(`Logging in as ${username}.`);
 
-  return connection.login( username, password + securityToken )
-    // NOTE: Uncomment this to debug connection issues.
-    // .then(response => {
-    //   console.log(connection);
-    //   console.log(response);
-    //   return state;
-    // })
-    .then(() => state)
-
+  return (
+    connection
+      .login(username, password + securityToken)
+      // NOTE: Uncomment this to debug connection issues.
+      // .then(response => {
+      //   console.log(connection);
+      //   console.log(response);
+      //   return state;
+      // })
+      .then(() => state)
+  );
 }
 
 /**
@@ -401,18 +453,17 @@ function login(state) {
  * @returns {State}
  */
 export function execute(...operations) {
-
   const initialState = {
     logger: {
       info: console.info.bind(console),
-      debug: console.log.bind(console)
+      debug: console.log.bind(console),
     },
     references: [],
     data: null,
-    configuration: {}
-  }
+    configuration: {},
+  };
 
-  return state => {
+  return (state) => {
     // Note: we no longer need `steps` anymore since `commonExecute`
     // takes each operation as an argument.
     return commonExecute(
@@ -420,12 +471,9 @@ export function execute(...operations) {
       login,
       ...flatten(operations),
       cleanupState
-    )({ ...initialState, ...state })
-
+    )({ ...initialState, ...state });
   };
-
 }
-
 
 /**
  * Removes unserializable keys from the state.
@@ -471,15 +519,34 @@ export function steps(...operations) {
  * @returns {State}
  */
 function expandReferences(state, attrs) {
-  return mapValues(function(value) {
+  return mapValues(function (value) {
     return typeof value == 'function' ? value(state) : value;
   })(attrs);
 }
 
 export { lookup, relationship } from './sourceHelpers';
 
+// Note that we expose the entire axios package to the user here.
+exports.axios = axios;
+
 export {
-  each, join, fields, field, source, sourceValue, map, combine,
-  merge, dataPath, dataValue, referencePath, lastReferenceValue,
-  index, beta, toArray, arrayToString, alterState, humanProper
+  each,
+  join,
+  fields,
+  field,
+  source,
+  sourceValue,
+  map,
+  combine,
+  merge,
+  dataPath,
+  dataValue,
+  referencePath,
+  lastReferenceValue,
+  index,
+  beta,
+  toArray,
+  arrayToString,
+  alterState,
+  humanProper,
 } from 'language-common';
