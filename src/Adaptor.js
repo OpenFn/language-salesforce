@@ -86,7 +86,7 @@ export const describeGlobal = curry(function (sObject, state) {
  * @param {State} state - Runtime state.
  * @returns {State}
  */
-export const retrieve = curry(function (sObject, id, state) {
+export const retrieve = curry(function (sObject, id, callback, state) {
   let { connection } = state;
 
   const finalId = recursivelyExpandReferences(id)(state);
@@ -102,6 +102,12 @@ export const retrieve = curry(function (sObject, id, state) {
         ...state,
         references: [result, ...state.references],
       };
+    })
+    .then((state) => {
+      if (callback) {
+        return callback(state);
+      }
+      return state;
     })
     .catch(function (err) {
       console.error(err);
