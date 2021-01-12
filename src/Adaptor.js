@@ -89,9 +89,14 @@ export const describeGlobal = curry(function (sObject, state) {
 export const retrieve = curry(function (sObject, id, state) {
   let { connection } = state;
 
+  const finalId = recursivelyExpandReferences(id)(state);
+  console.log('sObject:', sObject);
+  console.log('id:', id);
+  console.log('expandedId:', finalId);
+
   return connection
     .sobject(sObject)
-    .retrieve(id)
+    .retrieve(finalId)
     .then((result) => {
       return {
         ...state,
@@ -501,6 +506,29 @@ function cleanupState(state) {
  */
 export function steps(...operations) {
   return flatten(operations);
+}
+
+/**
+ * Recursively expand object|number|string|boolean|array, each time resolving function calls and returning the resolved values
+ * @param {any} thing - Thing to expand
+ * @returns {object|number|string|boolean|array} expandedResult
+ */
+export function recursivelyExpandReferences(thing) {
+  return (state) => {
+    if (typeof thing !== 'object')
+      return typeof thing == 'function' ? thing(state) : thing;
+    let result = mapValues(function (value) {
+      if (Array.isArray(value)) {
+        return value.map((item) => {
+          return recursivelyExpandReferences(item)(state);
+        });
+      } else {
+        return recursivelyExpandReferences(value)(state);
+      }
+    })(thing);
+    if (Array.isArray(thing)) result = Object.values(result);
+    return result;
+  };
 }
 
 /**
