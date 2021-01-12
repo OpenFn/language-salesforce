@@ -1,5 +1,3 @@
-import axios from 'axios';
-
 /** @module Adaptor */
 
 /**
@@ -83,6 +81,9 @@ export const describeGlobal = curry(function (sObject, state) {
  * @example
  *  retrieve('ContentVersion', '0684K0000020Au7QAE/VersionData');
  * @function
+ * @param {String} sObject - The sObject to retrieve
+ * @param {String} id - The id of the record.
+ * @param {String} callback - A callback to execute once the record is retrieved.
  * @param {State} state - Runtime state.
  * @returns {State}
  */
@@ -90,9 +91,6 @@ export const retrieve = curry(function (sObject, id, callback, state) {
   let { connection } = state;
 
   const finalId = recursivelyExpandReferences(id)(state);
-  console.log('sObject:', sObject);
-  console.log('id:', id);
-  console.log('expandedId:', finalId);
 
   return connection
     .sobject(sObject)
@@ -154,8 +152,8 @@ export const query = curry(function (qs, state) {
  *  });
  * @function
  * @param {String} sObject - API name of the sObject.
- * @param {String} operation - API name of the sObject.
- * @param {String} options - API name of the sObject.
+ * @param {String} operation - The bulk operation to be performed
+ * @param {String} options - Options passed to the bulk api.
  * @param {Function} fun - A function which takes state and returns an array.
  * @param {State} state - Runtime state.
  * @returns {Operation}
@@ -561,26 +559,27 @@ function expandReferences(state, attrs) {
 export { lookup, relationship } from './sourceHelpers';
 
 // Note that we expose the entire axios package to the user here.
+import axios from 'axios';
 exports.axios = axios;
 
 export {
-  each,
-  join,
-  fields,
-  field,
-  source,
-  sourceValue,
-  map,
+  alterState,
+  arrayToString,
+  beta,
   combine,
-  merge,
   dataPath,
   dataValue,
-  referencePath,
-  lastReferenceValue,
-  index,
-  beta,
-  toArray,
-  arrayToString,
-  alterState,
+  each,
+  field,
+  fields,
   humanProper,
+  index,
+  join,
+  lastReferenceValue,
+  map,
+  merge,
+  referencePath,
+  source,
+  sourceValue,
+  toArray,
 } from 'language-common';
