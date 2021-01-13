@@ -47,44 +47,15 @@ export const describe = curry(function (sObject, state) {
 });
 
 /**
- * Outputs basic information about available Salesforce objects.
- * @public
- * @example
- *  describe();
- * @function
- * @param {State} state - Runtime state.
- * @returns {State}
- */
-export const describeGlobal = curry(function (sObject, state) {
-  let { connection } = state;
-
-  return connection
-    .describeGlobal()
-    .then((result) => {
-      console.log('Num of SObjects : ' + result.sobjects.length);
-      console.log(JSON.stringify(result.sobjects, null, 2));
-
-      return {
-        ...state,
-        references: [result, ...state.references],
-      };
-    })
-    .catch(function (err) {
-      console.error(err);
-      return err;
-    });
-});
-
-/**
  * Retrieves a Salesforce sObject(s).
  * @public
  * @example
  *  retrieve('ContentVersion', '0684K0000020Au7QAE/VersionData');
  * @function
  * @param {String} sObject - The sObject to retrieve
- * @param {String} id - The id of the record.
- * @param {String} callback - A callback to execute once the record is retrieved.
- * @param {State} state - Runtime state.
+ * @param {String} id - The id of the record
+ * @param {Function} callback - A callback to execute once the record is retrieved
+ * @param {State} state - Runtime state
  * @returns {State}
  */
 export const retrieve = curry(function (sObject, id, callback, state) {

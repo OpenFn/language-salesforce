@@ -1,7 +1,4 @@
 {
-  "plugins": [
-    "@babel/plugin-transform-flow-strip-types",
-    "@babel/plugin-proposal-function-bind"
-  ],
-  "presets": ["@babel/preset-env"]
+  "plugins": ["transform-flow-strip-types"],
+  "presets": ["es2015", "stage-0"]
 }
