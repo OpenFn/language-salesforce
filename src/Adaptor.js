@@ -11,34 +11,41 @@
  * @param {State} state
  */
 
-import { execute as commonExecute } from 'language-common';
-import jsforce from 'jsforce';
-import { curry, mapValues, flatten } from 'lodash-fp';
+import {
+  execute as commonExecute,
+  composeNextState,
+  recursivelyExpandReferences,
+} from "language-common";
+import jsforce from "jsforce";
+import { curry, mapValues, flatten } from "lodash-fp";
 
 /**
  * Outputs basic information about an sObject to `STDOUT`.
  * @public
- * @example
- *  describe('obj_name')
  * @function
- * @param {String} sObject - API name of the sObject.
- * @param {State} state - Runtime state.
- * @returns {State}
+ * @param {string} sObject - API name of the sObject.
+ * @param {state} state - Runtime state.
+ * @param {operation} callback - Function which takes state and returns a Promise
+ * @returns {state} state
+ * @example
+ *  describe('obj_name');
  */
-export const describe = curry(function (sObject, state) {
+export const describe = curry(function (sObject, state, callback) {
   let { connection } = state;
 
   return connection
     .sobject(sObject)
     .describe()
     .then((result) => {
-      console.log('Label : ' + result.label);
-      console.log('Num of Fields : ' + result.fields.length);
-
-      return {
-        ...state,
-        references: [result, ...state.references],
-      };
+      console.log("Label : " + result.label);
+      console.log("Num of Fields : " + result.fields.length);
+      return composeNextState(state, result);
+    })
+    .then((state) => {
+      if (callback) {
+        return callback(state);
+      }
+      return state;
     })
     .catch(function (err) {
       console.error(err);
@@ -49,14 +56,14 @@ export const describe = curry(function (sObject, state) {
 /**
  * Retrieves a Salesforce sObject(s).
  * @public
+ * @function
+ * @param {string} sObject - The sObject to retrieve
+ * @param {string} id - The id of the record
+ * @param {operation} callback - Function which takes state and returns a Promise
+ * @param {state} state - Runtime state
+ * @returns {state} state
  * @example
  *  retrieve('ContentVersion', '0684K0000020Au7QAE/VersionData');
- * @function
- * @param {String} sObject - The sObject to retrieve
- * @param {String} id - The id of the record
- * @param {Function} callback - A callback to execute once the record is retrieved
- * @param {State} state - Runtime state
- * @returns {State}
  */
 export const retrieve = curry(function (sObject, id, callback, state) {
   let { connection } = state;
@@ -67,10 +74,7 @@ export const retrieve = curry(function (sObject, id, callback, state) {
     .sobject(sObject)
     .retrieve(finalId)
     .then((result) => {
-      return {
-        ...state,
-        references: [result, ...state.references],
-      };
+      return composeNextState(state, result);
     })
     .then((state) => {
       if (callback) {
@@ -87,50 +91,58 @@ export const retrieve = curry(function (sObject, id, callback, state) {
 /**
  * Execute an SOQL query.
  * @public
+ * @function
+ * @param {string} qs - A query string.
+ * @param {state} state - Runtime state.
+ * @param {operation} callback - Function which takes state and returns a Promise
+ * @returns {state} state
  * @example
  *  query(`SELECT Id FROM Patient__c WHERE Health_ID__c = '${state.data.field1}'`);
- * @function
- * @param {String} qs - A query string.
- * @param {State} state - Runtime state.
- * @returns {Operation}
  */
-export const query = curry(function (qs, state) {
-  let { connection, references } = state;
-  console.log(`Executing query: ${qs}`);
+export const query = curry(function (qs, state, callback) {
+  let { connection } = state;
+  const finalQs = recursivelyExpandReferences(qs)(state);
+  console.log(`Executing query: ${finalQs}`);
 
-  return connection.query(qs, function (err, result) {
+  return connection.query(finalQs, function (err, result) {
     if (err) {
       return console.error(err);
     }
 
     console.log(result);
-
-    return {
-      ...state,
-      references: [result, ...state.references],
-    };
+    const nextState = composeNextState(state, result);
+    if (callback) return callback(nextState);
+    return nextState;
   });
 });
 
 /**
  * Create and execute a bulk job.
  * @public
+ * @function
+ * @param {string} sObject - API name of the sObject.
+ * @param {string} operation - The bulk operation to be performed
+ * @param {string} options - Options passed to the bulk api.
+ * @param {function} fun - A function which takes state and returns an array.
+ * @param {state} state - Runtime state.
+ * @param {operation} callback - Function which takes state and returns a Promise
+ * @returns {state} state
  * @example
  *  bulk('Patient__c', 'insert', { failOnError: true }, state => {
  *    return state.data.someArray.map(x => {
  *      return { 'Age__c': x.age, 'Name': x.name }
  *    })
  *  });
- * @function
- * @param {String} sObject - API name of the sObject.
- * @param {String} operation - The bulk operation to be performed
- * @param {String} options - Options passed to the bulk api.
- * @param {Function} fun - A function which takes state and returns an array.
- * @param {State} state - Runtime state.
- * @returns {Operation}
  */
-export const bulk = curry(function (sObject, operation, options, fun, state) {
-  let { connection, references } = state;
+export const bulk = curry(function (
+  sObject,
+  operation,
+  options,
+  fun,
+  state,
+  callback
+) {
+  let { connection } = state;
   let { failOnError, allowNoOp } = options;
   const finalAttrs = fun(state);
 
@@ -144,21 +156,21 @@ export const bulk = curry(function (sObject, operation, options, fun, state) {
   console.info(`Creating bulk ${operation} job for ${sObject}`, finalAttrs);
   const job = connection.bulk.createJob(sObject, operation, options);
 
-  console.info('Creating batch for job.');
+  console.info("Creating batch for job.");
   var batch = job.createBatch();
 
-  console.info('Executing batch.');
+  console.info("Executing batch.");
   batch.execute(finalAttrs);
 
   return batch
-    .on('queue', function (batchInfo) {
+    .on("queue", function (batchInfo) {
       console.info(batchInfo);
       const batchId = batchInfo.id;
       var batch = job.batch(batchId);
 
-      batch.on('error', function (err) {
+      batch.on("error", function (err) {
         job.close();
-        console.error('Request error:');
+        console.error("Request error:");
         throw err;
       });
 
@@ -171,14 +183,13 @@ export const bulk = curry(function (sObject, operation, options, fun, state) {
       });
 
       if (failOnError && errors.length > 0) {
-        console.error('Errors detected:');
+        console.error("Errors detected:");
         throw res;
       } else {
-        console.log('Result : ' + JSON.stringify(res, null, 2));
-        return {
-          ...state,
-          references: [res, ...state.references],
-        };
+        console.log("Result : " + JSON.stringify(res, null, 2));
+        const nextState = composeNextState(state, res);
+        if (callback) return callback(nextState);
+        return nextState;
       }
     });
 });
@@ -186,49 +197,56 @@ export const bulk = curry(function (sObject, operation, options, fun, state) {
 /**
  * Create a new object.
  * @public
+ * @function
+ * @param {string} sObject - API name of the sObject.
+ * @param {object} attrs - Field attributes for the new object.
+ * @param {state} state - Runtime state.
+ * @param {operation} callback - Function which takes state and returns a Promise
+ * @returns {state} state
  * @example
  *  create('obj_name', {
  *    attr1: "foo",
  *    attr2: "bar"
  *  })
- * @function
- * @param {String} sObject - API name of the sObject.
- * @param {Object} attrs - Field attributes for the new object.
- * @param {State} state - Runtime state.
- * @returns {Operation}
  */
-export const create = curry(function (sObject, attrs, state) {
+export const create = curry(function (sObject, attrs, state, callback) {
   let { connection, references } = state;
-  const finalAttrs = expandReferences(state, attrs);
+  const finalAttrs = recursivelyExpandReferences(attrs)(state);
   console.info(`Creating ${sObject}`, finalAttrs);
 
   return connection.create(sObject, finalAttrs).then(function (recordResult) {
-    console.log('Result : ' + JSON.stringify(recordResult));
-    return {
-      ...state,
-      references: [recordResult, ...state.references],
-    };
+    console.log("Result : " + JSON.stringify(recordResult));
+    const nextState = composeNextState(state, recordResult);
+    if (callback) return callback(nextState);
+    return nextState;
   });
 });
 
 /**
  * Create a new object if conditions are met.
  * @public
+ * @function
+ * @param {boolean} logical - a logical statement that will be evaluated.
+ * @param {string} sObject - API name of the sObject.
+ * @param {object} attrs - Field attributes for the new object.
+ * @param {state} state - Runtime state.
+ * @param {operation} callback - Function which takes state and returns a Promise
+ * @returns {state} state
  * @example
  *  createIf(true, 'obj_name', {
  *    attr1: "foo",
  *    attr2: "bar"
  *  })
- * @function
- * @param {boolean} logical - a logical statement that will be evaluated.
- * @param {String} sObject - API name of the sObject.
- * @param {Object} attrs - Field attributes for the new object.
- * @param {State} state - Runtime state.
- * @returns {Operation}
  */
-export const createIf = curry(function (logical, sObject, attrs, state) {
-  let { connection, references } = state;
-  const finalAttrs = expandReferences(state, attrs);
+export const createIf = curry(function (
+  logical,
+  sObject,
+  attrs,
+  state,
+  callback
+) {
+  let { connection } = state;
+  const finalAttrs = recursivelyExpandReferences(attrs)(state);
   if (logical) {
     console.info(`Creating ${sObject}`, finalAttrs);
   } else {
@@ -237,85 +255,96 @@ export const createIf = curry(function (logical, sObject, attrs, state) {
 
   if (logical) {
     return connection.create(sObject, finalAttrs).then(function (recordResult) {
-      console.log('Result : ' + JSON.stringify(recordResult));
-      return {
-        ...state,
-        references: [recordResult, ...state.references],
-      };
+      console.log("Result : " + JSON.stringify(recordResult));
+      const nextState = composeNextState(state, recordResult);
+      if (callback) return callback(nextState);
+      return nextState;
     });
   } else {
-    return {
+    const nextState = {
       ...state,
     };
+    if (callback) return callback(nextState);
+    return nextState;
   }
 });
 
 /**
  * Upsert an object.
  * @public
+ * @function
+ * @param {string} sObject - API name of the sObject.
+ * @param {string} externalId - ID.
+ * @param {object} attrs - Field attributes for the new object.
+ * @param {state} state - Runtime state.
+ * @param {operation} callback - Function which takes state and returns a Promise
+ * @returns {state} state
  * @example
  *  upsert('obj_name', 'ext_id', {
  *    attr1: "foo",
  *    attr2: "bar"
  *  })
- * @function
- * @param {String} sObject - API name of the sObject.
- * @param {String} externalId - ID.
- * @param {Object} attrs - Field attributes for the new object.
- * @param {State} state - Runtime state.
- * @returns {Operation}
  */
-export const upsert = curry(function (sObject, externalId, attrs, state) {
-  let { connection, references } = state;
-  const finalAttrs = expandReferences(state, attrs);
+export const upsert = curry(function (
+  sObject,
+  externalId,
+  attrs,
+  state,
+  callback
+) {
+  let { connection } = state;
+  const finalAttrs = recursivelyExpandReferences(attrs)(state);
+  const finalExternalId = recursivelyExpandReferences(externalId)(state);
   console.info(
     `Upserting ${sObject} with externalId`,
-    externalId,
-    ':',
+    finalExternalId,
+    ":",
     finalAttrs
   );
 
   return connection
-    .upsert(sObject, finalAttrs, externalId)
+    .upsert(sObject, finalAttrs, finalExternalId)
     .then(function (recordResult) {
-      console.log('Result : ' + JSON.stringify(recordResult));
-      return {
-        ...state,
-        references: [recordResult, ...state.references],
-      };
+      console.log("Result : " + JSON.stringify(recordResult));
+      const nextState = composeNextState(state, recordResult);
+      if (callback) return callback(nextState);
+      return nextState;
     });
 });
 
 /**
  * Upsert if conditions are met.
  * @public
+ * @function
+ * @param {boolean} logical - a logical statement that will be evaluated.
+ * @param {string} sObject - API name of the sObject.
+ * @param {string} externalId - ID.
+ * @param {object} attrs - Field attributes for the new object.
+ * @param {state} state - Runtime state.
+ * @param {operation} callback - Function which takes state and returns a Promise
+ * @returns {state} state
  * @example
  *  upsertIf(true, 'obj_name', 'ext_id', {
  *    attr1: "foo",
  *    attr2: "bar"
  *  })
- * @function
- * @param {boolean} logical - a logical statement that will be evaluated.
- * @param {String} sObject - API name of the sObject.
- * @param {String} externalId - ID.
- * @param {Object} attrs - Field attributes for the new object.
- * @param {State} state - Runtime state.
- * @returns {Operation}
  */
 export const upsertIf = curry(function (
   logical,
   sObject,
   externalId,
   attrs,
-  state
+  state,
+  callback
 ) {
-  let { connection, references } = state;
-  const finalAttrs = expandReferences(state, attrs);
+  let { connection } = state;
+  const finalAttrs = recursivelyExpandReferences(attrs)(state);
+  const finalExternalId = recursivelyExpandReferences(externalId)(state);
   if (logical) {
     console.info(
       `Upserting ${sObject} with externalId`,
-      externalId,
-      ':',
+      finalExternalId,
+      ":",
       finalAttrs
     );
   } else {
@@ -324,77 +353,81 @@ export const upsertIf = curry(function (
 
   if (logical) {
     return connection
-      .upsert(sObject, finalAttrs, externalId)
+      .upsert(sObject, finalAttrs, finalExternalId)
       .then(function (recordResult) {
-        console.log('Result : ' + JSON.stringify(recordResult));
-        return {
-          ...state,
-          references: [recordResult, ...state.references],
-        };
+        console.log("Result : " + JSON.stringify(recordResult));
+        const nextState = composeNextState(state, recordResult);
+        if (callback) return callback(nextState);
+        return nextState;
       });
   } else {
-    return {
+    const nextState = {
       ...state,
     };
+    if (callback) return callback(nextState);
+    return nextState;
   }
 });
 
 /**
  * Update an object.
  * @public
+ * @function
+ * @param {string} sObject - API name of the sObject.
+ * @param {object} attrs - Field attributes for the new object.
+ * @param {state} state - Runtime state.
+ * @param {operation} callback - Function which takes state and returns a Promise
+ * @returns {state} state
  * @example
  *  update('obj_name', {
  *    attr1: "foo",
  *    attr2: "bar"
  *  })
- * @function
- * @param {String} sObject - API name of the sObject.
- * @param {Object} attrs - Field attributes for the new object.
- * @param {State} state - Runtime state.
- * @returns {Operation}
  */
-export const update = curry(function (sObject, attrs, state) {
-  let { connection, references } = state;
-  const finalAttrs = expandReferences(state, attrs);
+export const update = curry(function (sObject, attrs, state, callback) {
+  let { connection } = state;
+  const finalAttrs = recursivelyExpandReferences(attrs)(state);
   console.info(`Updating ${sObject}`, finalAttrs);
 
   return connection.update(sObject, finalAttrs).then(function (recordResult) {
-    console.log('Result : ' + JSON.stringify(recordResult));
-    return {
-      ...state,
-      references: [recordResult, ...state.references],
-    };
+    console.log("Result : " + JSON.stringify(recordResult));
+    const nextState = composeNextState(state, recordResult);
+    if (callback) return callback(nextState);
+    return nextState;
   });
 });
 
 /**
  * Get a reference ID by an index.
  * @public
- * @example
- *  reference(0)
  * @function
  * @param {number} position - Position for references array.
- * @param {State} state - Array of references.
- * @returns {State}
+ * @param {state} state - Runtime state.
+ * @param {operation} [callback] - Function which takes state and returns a Promise
+ * @returns {state} state
+ * @example
+ *  reference(0)
  */
-export const reference = curry(function (position, state) {
+export const reference = curry(function (position, state, callback) {
   const { references } = state;
-  return references[position].id;
+  const nextState = composeNextState(state, references[position].id);
+  if (callback) return callback(nextState);
+  return nextState;
 });
 
 /**
  * Creates a connection.
- * @example
- *  createConnection(state)
  * @function
- * @param {State} state - Runtime state.
- * @returns {State}
+ * @param {state} state - Runtime state.
+ * @returns {state} state
+ * @example
+ * createConnection(state)
  */
 function createConnection(state) {
   const { loginUrl } = state.configuration;
 
   if (!loginUrl) {
-    throw new Error('loginUrl missing from configuration.');
+    throw new Error("loginUrl missing from configuration.");
   }
 
   return { ...state, connection: new jsforce.Connection({ loginUrl }) };
@@ -402,11 +435,11 @@ function createConnection(state) {
 
 /**
  * Performs a login.
+ * @function
+ * @param {state} state - Runtime state.
+ * @returns {state} state
  * @example
  *  login(state)
- * @function
- * @param {State} state - Runtime state.
- * @returns {State}
  */
 function login(state) {
   const { username, password, securityToken } = state.configuration;
@@ -429,8 +462,8 @@ function login(state) {
 /**
  * Executes an operation.
  * @function
- * @param {Operation} operations - Operations
- * @returns {State}
+ * @param {operation} operations - Operations
+ * @returns {state}
  */
 export function execute(...operations) {
   const initialState = {
@@ -457,11 +490,11 @@ export function execute(...operations) {
 
 /**
  * Removes unserializable keys from the state.
+ * @function
+ * @param {state} state - Runtime state.
+ * @returns {state} state
  * @example
  *  cleanupState(state)
- * @function
- * @param {State} state
- * @returns {State}
  */
 function cleanupState(state) {
   delete state.connection;
@@ -471,66 +504,22 @@ function cleanupState(state) {
 /**
  * Flattens an array of operations.
  * @public
+ * @function
+ * @returns {array}
  * @example
  *  steps(
  *    createIf(params),
  *    update(params)
  *  )
- * @function
- * @returns {Array}
  */
 export function steps(...operations) {
   return flatten(operations);
 }
 
-/**
- * Recursively expand object|number|string|boolean|array, each time resolving function calls and returning the resolved values
- * @param {any} thing - Thing to expand
- * @returns {object|number|string|boolean|array} expandedResult
- */
-export function recursivelyExpandReferences(thing) {
-  return (state) => {
-    if (typeof thing !== 'object')
-      return typeof thing == 'function' ? thing(state) : thing;
-    let result = mapValues(function (value) {
-      if (Array.isArray(value)) {
-        return value.map((item) => {
-          return recursivelyExpandReferences(item)(state);
-        });
-      } else {
-        return recursivelyExpandReferences(value)(state);
-      }
-    })(thing);
-    if (Array.isArray(thing)) result = Object.values(result);
-    return result;
-  };
-}
-
-/**
- * Expands references.
- * @example
- *  expandReferences(
- *    state,
- *    {
- *      attr1: "foo",
- *      attr2: "bar"
- *    }
- *  )
- * @function
- * @param {State} state - Runtime state.
- * @param {Object} attrs - Field attributes for the new object.
- * @returns {State}
- */
-function expandReferences(state, attrs) {
-  return mapValues(function (value) {
-    return typeof value == 'function' ? value(state) : value;
-  })(attrs);
-}
-
-export { lookup, relationship } from './sourceHelpers';
+export { lookup, relationship } from "./sourceHelpers";
 
 // Note that we expose the entire axios package to the user here.
-import axios from 'axios';
+import axios from "axios";
 exports.axios = axios;
 
 export {
@@ -553,4 +542,4 @@ export {
   source,
   sourceValue,
   toArray,
-} from 'language-common';
+} from "language-common";
