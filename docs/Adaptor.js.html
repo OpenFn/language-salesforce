@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: Adaptor.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: Adaptor.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.execute = execute;
+exports.steps = steps;
+exports.recursivelyExpandReferences = recursivelyExpandReferences;
+Object.defineProperty(exports, "alterState", {
+  enumerable: true,
+  get: function () {
+    return _languageCommon.alterState;
+  }
+});
+Object.defineProperty(exports, "arrayToString", {
+  enumerable: true,
+  get: function () {
+    return _languageCommon.arrayToString;
+  }
+});
+Object.defineProperty(exports, "beta", {
+  enumerable: true,
+  get: function () {
+    return _languageCommon.beta;
+  }
+});
+Object.defineProperty(exports, "combine", {
+  enumerable: true,
+  get: function () {
+    return _languageCommon.combine;
+  }
+});
+Object.defineProperty(exports, "dataPath", {
+  enumerable: true,
+  get: function () {
+    return _languageCommon.dataPath;
+  }
+});
+Object.defineProperty(exports, "dataValue", {
+  enumerable: true,
+  get: function () {
+    return _languageCommon.dataValue;
+  }
+});
+Object.defineProperty(exports, "each", {
+  enumerable: true,
+  get: function () {
+    return _languageCommon.each;
+  }
+});
+Object.defineProperty(exports, "field", {
+  enumerable: true,
+  get: function () {
+    return _languageCommon.field;
+  }
+});
+Object.defineProperty(exports, "fields", {
+  enumerable: true,
+  get: function () {
+    return _languageCommon.fields;
+  }
+});
+Object.defineProperty(exports, "http", {
+  enumerable: true,
+  get: function () {
+    return _languageCommon.http;
+  }
+});
+Object.defineProperty(exports, "humanProper", {
+  enumerable: true,
+  get: function () {
+    return _languageCommon.humanProper;
+  }
+});
+Object.defineProperty(exports, "index", {
+  enumerable: true,
+  get: function () {
+    return _languageCommon.index;
+  }
+});
+Object.defineProperty(exports, "join", {
+  enumerable: true,
+  get: function () {
+    return _languageCommon.join;
+  }
+});
+Object.defineProperty(exports, "lastReferenceValue", {
+  enumerable: true,
+  get: function () {
+    return _languageCommon.lastReferenceValue;
+  }
+});
+Object.defineProperty(exports, "map", {
+  enumerable: true,
+  get: function () {
+    return _languageCommon.map;
+  }
+});
+Object.defineProperty(exports, "merge", {
+  enumerable: true,
+  get: function () {
+    return _languageCommon.merge;
+  }
+});
+Object.defineProperty(exports, "referencePath", {
+  enumerable: true,
+  get: function () {
+    return _languageCommon.referencePath;
+  }
+});
+Object.defineProperty(exports, "source", {
+  enumerable: true,
+  get: function () {
+    return _languageCommon.source;
+  }
+});
+Object.defineProperty(exports, "sourceValue", {
+  enumerable: true,
+  get: function () {
+    return _languageCommon.sourceValue;
+  }
+});
+Object.defineProperty(exports, "toArray", {
+  enumerable: true,
+  get: function () {
+    return _languageCommon.toArray;
+  }
+});
+Object.defineProperty(exports, "lookup", {
+  enumerable: true,
+  get: function () {
+    return _sourceHelpers.lookup;
+  }
+});
+Object.defineProperty(exports, "relationship", {
+  enumerable: true,
+  get: function () {
+    return _sourceHelpers.relationship;
+  }
+});
+exports.reference = exports.update = exports.upsertIf = exports.upsert = exports.createIf = exports.create = exports.bulk = exports.query = exports.retrieve = exports.describe = void 0;
+
+var _languageCommon = require("@openfn/language-common");
+
+var _jsforce = _interopRequireDefault(require("jsforce"));
+
+var _lodashFp = require("lodash-fp");
+
+var _sourceHelpers = require("./sourceHelpers");
+
+var _axios = _interopRequireDefault(require("axios"));
+
+function _interopRequireDefault(obj) { return obj &amp;&amp; obj.__esModule ? obj : { default: obj }; }
+
+/** @module Adaptor */
+
+/**
+ * @typedef {Object} State
+ * @property {object} data JSON Data.
+ * @property {Array&lt;Reference>} references History of all previous operations.
+ */
+
+/**
+ * @typedef {Function} Operation
+ * @param {State} state
+ */
+
+/**
+ * Outputs basic information about an sObject to `STDOUT`.
+ * @public
+ * @example
+ *  describe('obj_name')
+ * @function
+ * @param {String} sObject - API name of the sObject.
+ * @param {State} state - Runtime state.
+ * @returns {State}
+ */
+const describe = (0, _lodashFp.curry)(function (sObject, state) {
+  let {
+    connection
+  } = state;
+  return connection.sobject(sObject).describe().then(result => {
+    console.log('Label : ' + result.label);
+    console.log('Num of Fields : ' + result.fields.length);
+    return { ...state,
+      references: [result, ...state.references]
+    };
+  }).catch(function (err) {
+    console.error(err);
+    return err;
+  });
+});
+/**
+ * Retrieves a Salesforce sObject(s).
+ * @public
+ * @example
+ *  retrieve('ContentVersion', '0684K0000020Au7QAE/VersionData');
+ * @function
+ * @param {String} sObject - The sObject to retrieve
+ * @param {String} id - The id of the record
+ * @param {Function} callback - A callback to execute once the record is retrieved
+ * @param {State} state - Runtime state
+ * @returns {State}
+ */
+
+exports.describe = describe;
+const retrieve = (0, _lodashFp.curry)(function (sObject, id, callback, state) {
+  let {
+    connection
+  } = state;
+  const finalId = recursivelyExpandReferences(id)(state);
+  return connection.sobject(sObject).retrieve(finalId).then(result => {
+    return { ...state,
+      references: [result, ...state.references]
+    };
+  }).then(state => {
+    if (callback) {
+      return callback(state);
+    }
+
+    return state;
+  }).catch(function (err) {
+    console.error(err);
+    return err;
+  });
+});
+/**
+ * Execute an SOQL query.
+ * @public
+ * @example
+ *  query(`SELECT Id FROM Patient__c WHERE Health_ID__c = '${state.data.field1}'`);
+ * @function
+ * @param {String} qs - A query string.
+ * @param {State} state - Runtime state.
+ * @returns {Operation}
+ */
+
+exports.retrieve = retrieve;
+const query = (0, _lodashFp.curry)(function (qs, state) {
+  let {
+    connection,
+    references
+  } = state;
+  console.log(`Executing query: ${qs}`);
+  return connection.query(qs, function (err, result) {
+    if (err) {
+      return console.error(err);
+    }
+
+    console.log(result);
+    return { ...state,
+      references: [result, ...state.references]
+    };
+  });
+});
+/**
+ * Create and execute a bulk job.
+ * @public
+ * @example
+ *  bulk('Patient__c', 'insert', { failOnError: true }, state => {
+ *    return state.data.someArray.map(x => {
+ *      return { 'Age__c': x.age, 'Name': x.name }
+ *    })
+ *  });
+ * @function
+ * @param {String} sObject - API name of the sObject.
+ * @param {String} operation - The bulk operation to be performed
+ * @param {String} options - Options passed to the bulk api.
+ * @param {Function} fun - A function which takes state and returns an array.
+ * @param {State} state - Runtime state.
+ * @returns {Operation}
+ */
+
+exports.query = query;
+const bulk = (0, _lodashFp.curry)(function (sObject, operation, options, fun, state) {
+  let {
+    connection,
+    references
+  } = state;
+  let {
+    failOnError,
+    allowNoOp
+  } = options;
+  const finalAttrs = fun(state);
+
+  if (allowNoOp &amp;&amp; finalAttrs.length === 0) {
+    console.info(`No items in ${sObject} array. Skipping bulk ${operation} operation.`);
+    return state;
+  }
+
+  console.info(`Creating bulk ${operation} job for ${sObject}`, finalAttrs);
+  const job = connection.bulk.createJob(sObject, operation, options);
+  console.info('Creating batch for job.');
+  var batch = job.createBatch();
+  console.info('Executing batch.');
+  batch.execute(finalAttrs);
+  return batch.on('queue', function (batchInfo) {
+    console.info(batchInfo);
+    const batchId = batchInfo.id;
+    var batch = job.batch(batchId);
+    batch.on('error', function (err) {
+      job.close();
+      console.error('Request error:');
+      throw err;
+    });
+    batch.poll(3 * 1000, 120 * 1000);
+  }).then(res => {
+    job.close();
+    const errors = res.filter(item => {
+      return item.success === false;
+    });
+
+    if (failOnError &amp;&amp; errors.length > 0) {
+      console.error('Errors detected:');
+      throw res;
+    } else {
+      console.log('Result : ' + JSON.stringify(res, null, 2));
+      return { ...state,
+        references: [res, ...state.references]
+      };
+    }
+  });
+});
+/**
+ * Create a new object.
+ * @public
+ * @example
+ *  create('obj_name', {
+ *    attr1: "foo",
+ *    attr2: "bar"
+ *  })
+ * @function
+ * @param {String} sObject - API name of the sObject.
+ * @param {Object} attrs - Field attributes for the new object.
+ * @param {State} state - Runtime state.
+ * @returns {Operation}
+ */
+
+exports.bulk = bulk;
+const create = (0, _lodashFp.curry)(function (sObject, attrs, state) {
+  let {
+    connection,
+    references
+  } = state;
+  const finalAttrs = expandReferences(state, attrs);
+  console.info(`Creating ${sObject}`, finalAttrs);
+  return connection.create(sObject, finalAttrs).then(function (recordResult) {
+    console.log('Result : ' + JSON.stringify(recordResult));
+    return { ...state,
+      references: [recordResult, ...state.references]
+    };
+  });
+});
+/**
+ * Create a new object if conditions are met.
+ * @public
+ * @example
+ *  createIf(true, 'obj_name', {
+ *    attr1: "foo",
+ *    attr2: "bar"
+ *  })
+ * @function
+ * @param {boolean} logical - a logical statement that will be evaluated.
+ * @param {String} sObject - API name of the sObject.
+ * @param {Object} attrs - Field attributes for the new object.
+ * @param {State} state - Runtime state.
+ * @returns {Operation}
+ */
+
+exports.create = create;
+const createIf = (0, _lodashFp.curry)(function (logical, sObject, attrs, state) {
+  let {
+    connection,
+    references
+  } = state;
+  const finalAttrs = expandReferences(state, attrs);
+
+  if (logical) {
+    console.info(`Creating ${sObject}`, finalAttrs);
+  } else {
+    console.info(`Not creating ${sObject} because logical is false.`);
+  }
+
+  if (logical) {
+    return connection.create(sObject, finalAttrs).then(function (recordResult) {
+      console.log('Result : ' + JSON.stringify(recordResult));
+      return { ...state,
+        references: [recordResult, ...state.references]
+      };
+    });
+  } else {
+    return { ...state
+    };
+  }
+});
+/**
+ * Upsert an object.
+ * @public
+ * @example
+ *  upsert('obj_name', 'ext_id', {
+ *    attr1: "foo",
+ *    attr2: "bar"
+ *  })
+ * @function
+ * @param {String} sObject - API name of the sObject.
+ * @param {String} externalId - ID.
+ * @param {Object} attrs - Field attributes for the new object.
+ * @param {State} state - Runtime state.
+ * @returns {Operation}
+ */
+
+exports.createIf = createIf;
+const upsert = (0, _lodashFp.curry)(function (sObject, externalId, attrs, state) {
+  let {
+    connection,
+    references
+  } = state;
+  const finalAttrs = expandReferences(state, attrs);
+  console.info(`Upserting ${sObject} with externalId`, externalId, ':', finalAttrs);
+  return connection.upsert(sObject, finalAttrs, externalId).then(function (recordResult) {
+    console.log('Result : ' + JSON.stringify(recordResult));
+    return { ...state,
+      references: [recordResult, ...state.references]
+    };
+  });
+});
+/**
+ * Upsert if conditions are met.
+ * @public
+ * @example
+ *  upsertIf(true, 'obj_name', 'ext_id', {
+ *    attr1: "foo",
+ *    attr2: "bar"
+ *  })
+ * @function
+ * @param {boolean} logical - a logical statement that will be evaluated.
+ * @param {String} sObject - API name of the sObject.
+ * @param {String} externalId - ID.
+ * @param {Object} attrs - Field attributes for the new object.
+ * @param {State} state - Runtime state.
+ * @returns {Operation}
+ */
+
+exports.upsert = upsert;
+const upsertIf = (0, _lodashFp.curry)(function (logical, sObject, externalId, attrs, state) {
+  let {
+    connection,
+    references
+  } = state;
+  const finalAttrs = expandReferences(state, attrs);
+
+  if (logical) {
+    console.info(`Upserting ${sObject} with externalId`, externalId, ':', finalAttrs);
+  } else {
+    console.info(`Not upserting ${sObject} because logical is false.`);
+  }
+
+  if (logical) {
+    return connection.upsert(sObject, finalAttrs, externalId).then(function (recordResult) {
+      console.log('Result : ' + JSON.stringify(recordResult));
+      return { ...state,
+        references: [recordResult, ...state.references]
+      };
+    });
+  } else {
+    return { ...state
+    };
+  }
+});
+/**
+ * Update an object.
+ * @public
+ * @example
+ *  update('obj_name', {
+ *    attr1: "foo",
+ *    attr2: "bar"
+ *  })
+ * @function
+ * @param {String} sObject - API name of the sObject.
+ * @param {Object} attrs - Field attributes for the new object.
+ * @param {State} state - Runtime state.
+ * @returns {Operation}
+ */
+
+exports.upsertIf = upsertIf;
+const update = (0, _lodashFp.curry)(function (sObject, attrs, state) {
+  let {
+    connection,
+    references
+  } = state;
+  const finalAttrs = expandReferences(state, attrs);
+  console.info(`Updating ${sObject}`, finalAttrs);
+  return connection.update(sObject, finalAttrs).then(function (recordResult) {
+    console.log('Result : ' + JSON.stringify(recordResult));
+    return { ...state,
+      references: [recordResult, ...state.references]
+    };
+  });
+});
+/**
+ * Get a reference ID by an index.
+ * @public
+ * @example
+ *  reference(0)
+ * @function
+ * @param {number} position - Position for references array.
+ * @param {State} state - Array of references.
+ * @returns {State}
+ */
+
+exports.update = update;
+const reference = (0, _lodashFp.curry)(function (position, state) {
+  const {
+    references
+  } = state;
+  return references[position].id;
+});
+/**
+ * Creates a connection.
+ * @example
+ *  createConnection(state)
+ * @function
+ * @param {State} state - Runtime state.
+ * @returns {State}
+ */
+
+exports.reference = reference;
+
+function createConnection(state) {
+  const {
+    loginUrl
+  } = state.configuration;
+
+  if (!loginUrl) {
+    throw new Error('loginUrl missing from configuration.');
+  }
+
+  return { ...state,
+    connection: new _jsforce.default.Connection({
+      loginUrl
+    })
+  };
+}
+/**
+ * Performs a login.
+ * @example
+ *  login(state)
+ * @function
+ * @param {State} state - Runtime state.
+ * @returns {State}
+ */
+
+
+function login(state) {
+  const {
+    username,
+    password,
+    securityToken
+  } = state.configuration;
+  let {
+    connection
+  } = state;
+  console.info(`Logging in as ${username}.`);
+  return connection.login(username, password + securityToken) // NOTE: Uncomment this to debug connection issues.
+  // .then(response => {
+  //   console.log(connection);
+  //   console.log(response);
+  //   return state;
+  // })
+  .then(() => state);
+}
+/**
+ * Executes an operation.
+ * @function
+ * @param {Operation} operations - Operations
+ * @returns {State}
+ */
+
+
+function execute(...operations) {
+  const initialState = {
+    logger: {
+      info: console.info.bind(console),
+      debug: console.log.bind(console)
+    },
+    references: [],
+    data: null,
+    configuration: {}
+  };
+  return state => {
+    // Note: we no longer need `steps` anymore since `commonExecute`
+    // takes each operation as an argument.
+    return (0, _languageCommon.execute)(createConnection, login, ...(0, _lodashFp.flatten)(operations), cleanupState)({ ...initialState,
+      ...state
+    });
+  };
+}
+/**
+ * Removes unserializable keys from the state.
+ * @example
+ *  cleanupState(state)
+ * @function
+ * @param {State} state
+ * @returns {State}
+ */
+
+
+function cleanupState(state) {
+  delete state.connection;
+  return state;
+}
+/**
+ * Flattens an array of operations.
+ * @public
+ * @example
+ *  steps(
+ *    createIf(params),
+ *    update(params)
+ *  )
+ * @function
+ * @returns {Array}
+ */
+
+
+function steps(...operations) {
+  return (0, _lodashFp.flatten)(operations);
+}
+/**
+ * Recursively expand object|number|string|boolean|array, each time resolving function calls and returning the resolved values
+ * @param {any} thing - Thing to expand
+ * @returns {object|number|string|boolean|array} expandedResult
+ */
+
+
+function recursivelyExpandReferences(thing) {
+  return state => {
+    if (typeof thing !== 'object') return typeof thing == 'function' ? thing(state) : thing;
+    let result = (0, _lodashFp.mapValues)(function (value) {
+      if (Array.isArray(value)) {
+        return value.map(item => {
+          return recursivelyExpandReferences(item)(state);
+        });
+      } else {
+        return recursivelyExpandReferences(value)(state);
+      }
+    })(thing);
+    if (Array.isArray(thing)) result = Object.values(result);
+    return result;
+  };
+}
+/**
+ * Expands references.
+ * @example
+ *  expandReferences(
+ *    state,
+ *    {
+ *      attr1: "foo",
+ *      attr2: "bar"
+ *    }
+ *  )
+ * @function
+ * @param {State} state - Runtime state.
+ * @param {Object} attrs - Field attributes for the new object.
+ * @returns {State}
+ */
+
+
+function expandReferences(state, attrs) {
+  return (0, _lodashFp.mapValues)(function (value) {
+    return typeof value == 'function' ? value(state) : value;
+  })(attrs);
+}
+
+exports.axios = _axios.default;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Adaptor.html">Adaptor</a></li><li><a href="module-FakeAdaptor.html">FakeAdaptor</a></li></ul><h3>Global</h3><ul><li><a href="global.html#lookup">lookup</a></li><li><a href="global.html#relationship">relationship</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.6</a> on Wed Feb 17 2021 14:14:50 GMT+0000 (Greenwich Mean Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
