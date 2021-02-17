@@ -75,6 +75,8 @@ Run tests using `npm run test` or `npm run test:watch`
 
 Build the project using `make`.
 
+To build the docs for this repo, run `./node_modules/.bin/jsdoc --readme ./README.md ./lib -d docs`.
+
 Other
 -----
 Create SOAP session
