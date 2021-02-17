@@ -1,5 +1,5 @@
 import { curry, merge, reduce, zipObject } from 'lodash-fp';
-import { sourceValue, field } from 'language-common';
+import { sourceValue, field } from '@openfn/language-common';
 
 /**
  * Adds a lookup or 'dome insert' to a record.

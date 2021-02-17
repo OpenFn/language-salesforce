@@ -11,7 +11,7 @@
  * @param {State} state
  */
 
-import { execute as commonExecute } from 'language-common';
+import { execute as commonExecute } from '@openfn/language-common';
 import jsforce from 'jsforce';
 import { curry, mapValues, flatten } from 'lodash-fp';
 
@@ -31,7 +31,7 @@ export const describe = curry(function (sObject, state) {
   return connection
     .sobject(sObject)
     .describe()
-    .then((result) => {
+    .then(result => {
       console.log('Label : ' + result.label);
       console.log('Num of Fields : ' + result.fields.length);
 
@@ -66,13 +66,13 @@ export const retrieve = curry(function (sObject, id, callback, state) {
   return connection
     .sobject(sObject)
     .retrieve(finalId)
-    .then((result) => {
+    .then(result => {
       return {
         ...state,
         references: [result, ...state.references],
       };
     })
-    .then((state) => {
+    .then(state => {
       if (callback) {
         return callback(state);
       }
@@ -164,9 +164,9 @@ export const bulk = curry(function (sObject, operation, options, fun, state) {
 
       batch.poll(3 * 1000, 120 * 1000);
     })
-    .then((res) => {
+    .then(res => {
       job.close();
-      const errors = res.filter((item) => {
+      const errors = res.filter(item => {
         return item.success === false;
       });
 
@@ -443,7 +443,7 @@ export function execute(...operations) {
     configuration: {},
   };
 
-  return (state) => {
+  return state => {
     // Note: we no longer need `steps` anymore since `commonExecute`
     // takes each operation as an argument.
     return commonExecute(
@@ -489,12 +489,12 @@ export function steps(...operations) {
  * @returns {object|number|string|boolean|array} expandedResult
  */
 export function recursivelyExpandReferences(thing) {
-  return (state) => {
+  return state => {
     if (typeof thing !== 'object')
       return typeof thing == 'function' ? thing(state) : thing;
     let result = mapValues(function (value) {
       if (Array.isArray(value)) {
-        return value.map((item) => {
+        return value.map(item => {
           return recursivelyExpandReferences(item)(state);
         });
       } else {
@@ -543,6 +543,7 @@ export {
   each,
   field,
   fields,
+  http,
   humanProper,
   index,
   join,
@@ -553,4 +554,4 @@ export {
   source,
   sourceValue,
   toArray,
-} from 'language-common';
+} from '@openfn/language-common';
