@@ -19,7 +19,7 @@ import { curry, mapValues, flatten } from 'lodash-fp';
  * Outputs basic information about an sObject to `STDOUT`.
  * @public
  * @example
- *  describe('obj_name')
+ * describe('obj_name')
  * @constructor
  * @param {String} sObject - API name of the sObject.
  * @param {State} state - Runtime state.
@@ -50,7 +50,7 @@ export const describe = curry(function (sObject, state) {
  * Retrieves a Salesforce sObject(s).
  * @public
  * @example
- *  retrieve('ContentVersion', '0684K0000020Au7QAE/VersionData');
+ * retrieve('ContentVersion', '0684K0000020Au7QAE/VersionData');
  * @constructor
  * @param {String} sObject - The sObject to retrieve
  * @param {String} id - The id of the record
@@ -88,7 +88,7 @@ export const retrieve = curry(function (sObject, id, callback, state) {
  * Execute an SOQL query.
  * @public
  * @example
- *  query(`SELECT Id FROM Patient__c WHERE Health_ID__c = '${state.data.field1}'`);
+ * query(`SELECT Id FROM Patient__c WHERE Health_ID__c = '${state.data.field1}'`);
  * @constructor
  * @param {String} qs - A query string.
  * @param {State} state - Runtime state.
@@ -116,11 +116,11 @@ export const query = curry(function (qs, state) {
  * Create and execute a bulk job.
  * @public
  * @example
- *  bulk('Patient__c', 'insert', { failOnError: true }, state => {
- *    return state.data.someArray.map(x => {
- *      return { 'Age__c': x.age, 'Name': x.name }
- *    })
- *  });
+ * bulk('Patient__c', 'insert', { failOnError: true }, state => {
+ *   return state.data.someArray.map(x => {
+ *     return { 'Age__c': x.age, 'Name': x.name }
+ *   })
+ * });
  * @constructor
  * @param {String} sObject - API name of the sObject.
  * @param {String} operation - The bulk operation to be performed
@@ -187,10 +187,10 @@ export const bulk = curry(function (sObject, operation, options, fun, state) {
  * Create a new object.
  * @public
  * @example
- *  create('obj_name', {
- *    attr1: "foo",
- *    attr2: "bar"
- *  })
+ * create('obj_name', {
+ *   attr1: "foo",
+ *   attr2: "bar"
+ * })
  * @constructor
  * @param {String} sObject - API name of the sObject.
  * @param {Object} attrs - Field attributes for the new object.
@@ -215,10 +215,10 @@ export const create = curry(function (sObject, attrs, state) {
  * Create a new object if conditions are met.
  * @public
  * @example
- *  createIf(true, 'obj_name', {
- *    attr1: "foo",
- *    attr2: "bar"
- *  })
+ * createIf(true, 'obj_name', {
+ *   attr1: "foo",
+ *   attr2: "bar"
+ * })
  * @constructor
  * @param {boolean} logical - a logical statement that will be evaluated.
  * @param {String} sObject - API name of the sObject.
@@ -254,10 +254,10 @@ export const createIf = curry(function (logical, sObject, attrs, state) {
  * Upsert an object.
  * @public
  * @example
- *  upsert('obj_name', 'ext_id', {
- *    attr1: "foo",
- *    attr2: "bar"
- *  })
+ * upsert('obj_name', 'ext_id', {
+ *   attr1: "foo",
+ *   attr2: "bar"
+ * })
  * @constructor
  * @param {String} sObject - API name of the sObject.
  * @param {String} externalId - ID.
@@ -290,10 +290,10 @@ export const upsert = curry(function (sObject, externalId, attrs, state) {
  * Upsert if conditions are met.
  * @public
  * @example
- *  upsertIf(true, 'obj_name', 'ext_id', {
- *    attr1: "foo",
- *    attr2: "bar"
- *  })
+ * upsertIf(true, 'obj_name', 'ext_id', {
+ *   attr1: "foo",
+ *   attr2: "bar"
+ * })
  * @constructor
  * @param {boolean} logical - a logical statement that will be evaluated.
  * @param {String} sObject - API name of the sObject.
@@ -343,10 +343,10 @@ export const upsertIf = curry(function (
  * Update an object.
  * @public
  * @example
- *  update('obj_name', {
- *    attr1: "foo",
- *    attr2: "bar"
- *  })
+ * update('obj_name', {
+ *   attr1: "foo",
+ *   attr2: "bar"
+ * })
  * @constructor
  * @param {String} sObject - API name of the sObject.
  * @param {Object} attrs - Field attributes for the new object.
@@ -371,7 +371,7 @@ export const update = curry(function (sObject, attrs, state) {
  * Get a reference ID by an index.
  * @public
  * @example
- *  reference(0)
+ * reference(0)
  * @constructor
  * @param {number} position - Position for references array.
  * @param {State} state - Array of references.
@@ -385,7 +385,7 @@ export const reference = curry(function (position, state) {
 /**
  * Creates a connection.
  * @example
- *  createConnection(state)
+ * createConnection(state)
  * @function
  * @param {State} state - Runtime state.
  * @returns {State}
@@ -403,7 +403,7 @@ function createConnection(state) {
 /**
  * Performs a login.
  * @example
- *  login(state)
+ * login(state)
  * @function
  * @param {State} state - Runtime state.
  * @returns {State}
@@ -458,7 +458,7 @@ export function execute(...operations) {
 /**
  * Removes unserializable keys from the state.
  * @example
- *  cleanupState(state)
+ * cleanupState(state)
  * @function
  * @param {State} state
  * @returns {State}
@@ -472,10 +472,10 @@ function cleanupState(state) {
  * Flattens an array of operations.
  * @public
  * @example
- *  steps(
- *    createIf(params),
- *    update(params)
- *  )
+ * steps(
+ *   createIf(params),
+ *   update(params)
+ * )
  * @function
  * @returns {Array}
  */
@@ -509,13 +509,13 @@ export function recursivelyExpandReferences(thing) {
 /**
  * Expands references.
  * @example
- *  expandReferences(
- *    state,
- *    {
- *      attr1: "foo",
- *      attr2: "bar"
- *    }
- *  )
+ * expandReferences(
+ *   state,
+ *   {
+ *     attr1: "foo",
+ *     attr2: "bar"
+ *   }
+ * )
  * @function
  * @param {State} state - Runtime state.
  * @param {Object} attrs - Field attributes for the new object.
