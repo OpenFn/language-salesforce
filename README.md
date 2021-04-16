@@ -1,7 +1,8 @@
 language-salesforce [![Build Status](https://travis-ci.org/OpenFn/language-salesforce.svg?branch=master)](https://travis-ci.org/OpenFn/language-salesforce)
 ===================
 
-Salesforce Language Pack for OpenFn
+Salesforce Language Pack for OpenFn. 
+**See the main docs site: http://openfn.github.io/language-salesforce/ **
 
 ## Release notes and deprecated CHANGELOG.md
 See [releases](https://github.com/OpenFn/language-salesforce/releases) for all
