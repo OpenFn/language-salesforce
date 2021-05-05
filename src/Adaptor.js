@@ -42,10 +42,6 @@ export const describe = curry(function (sObject, state) {
         ...state,
         references: [result, ...state.references],
       };
-    })
-    .catch(function (err) {
-      console.error(err);
-      return err;
     });
 });
 
@@ -80,15 +76,13 @@ export const retrieve = curry(function (sObject, id, callback, state) {
         return callback(state);
       }
       return state;
-    })
-    .catch(function (err) {
-      console.error(err);
-      return err;
     });
 });
 
 /**
  * Execute an SOQL query.
+ * Note that in an event of a query error,
+ * error logs will be printed but the operation will not throw the error.
  * @public
  * @example
  * query(`SELECT Id FROM Patient__c WHERE Health_ID__c = '${state.data.field1}'`);
