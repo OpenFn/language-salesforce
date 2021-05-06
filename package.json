@@ -1,6 +1,6 @@
 {
   "name": "@openfn/language-salesforce",
-  "version": "1.3.3",
+  "version": "2.0.0",
   "description": "Salesforce Language Pack for OpenFn",
   "homepage": "https://docs.openfn.org",
   "main": "lib/index.js",
@@ -20,10 +20,10 @@
   ],
   "dependencies": {
     "@openfn/language-common": "1.2.8",
-    "JSONPath": "^0.10.0",
-    "jsforce": "^1.9.3",
-    "lodash-fp": "^0.10.2",
     "axios": "^0.21.1",
+    "jsforce": "^1.9.3",
+    "JSONPath": "^0.10.0",
+    "lodash-fp": "^0.10.2",
     "mustache": "^2.2.0",
     "yargs": "^3.30.0"
   },
@@ -35,10 +35,10 @@
     "assertion-error": "^1.0.1",
     "chai": "^4.2.0",
     "deep-eql": "^4.0.0",
-    "nock": "^13.0.5",
-    "sinon": "^9.2.3",
     "jsdoc": "^3.6.6",
     "mocha": "^7.1.1",
+    "nock": "^13.0.5",
+    "sinon": "^9.2.3",
     "type-detect": "^1.0.0"
   }
 }
