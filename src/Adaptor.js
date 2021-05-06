@@ -11,9 +11,12 @@
  * @param {State} state
  */
 
-import { execute as commonExecute } from '@openfn/language-common';
+import {
+  execute as commonExecute,
+  expandReferences,
+} from '@openfn/language-common';
 import jsforce from 'jsforce';
-import { curry, mapValues, flatten } from 'lodash-fp';
+import { curry, flatten } from 'lodash-fp';
 
 /**
  * Outputs basic information about an sObject to `STDOUT`.
@@ -39,10 +42,6 @@ export const describe = curry(function (sObject, state) {
         ...state,
         references: [result, ...state.references],
       };
-    })
-    .catch(function (err) {
-      console.error(err);
-      return err;
     });
 });
 
@@ -61,7 +60,7 @@ export const describe = curry(function (sObject, state) {
 export const retrieve = curry(function (sObject, id, callback, state) {
   let { connection } = state;
 
-  const finalId = recursivelyExpandReferences(id)(state);
+  const finalId = expandReferences(id)(state);
 
   return connection
     .sobject(sObject)
@@ -77,15 +76,13 @@ export const retrieve = curry(function (sObject, id, callback, state) {
         return callback(state);
       }
       return state;
-    })
-    .catch(function (err) {
-      console.error(err);
-      return err;
     });
 });
 
 /**
  * Execute an SOQL query.
+ * Note that in an event of a query error,
+ * error logs will be printed but the operation will not throw the error.
  * @public
  * @example
  * query(`SELECT Id FROM Patient__c WHERE Health_ID__c = '${state.data.field1}'`);
@@ -95,7 +92,7 @@ export const retrieve = curry(function (sObject, id, callback, state) {
  * @returns {Operation}
  */
 export const query = curry(function (qs, state) {
-  let { connection, references } = state;
+  let { connection } = state;
   console.log(`Executing query: ${qs}`);
 
   return connection.query(qs, function (err, result) {
@@ -130,7 +127,7 @@ export const query = curry(function (qs, state) {
  * @returns {Operation}
  */
 export const bulk = curry(function (sObject, operation, options, fun, state) {
-  let { connection, references } = state;
+  let { connection } = state;
   let { failOnError, allowNoOp } = options;
   const finalAttrs = fun(state);
 
@@ -198,8 +195,8 @@ export const bulk = curry(function (sObject, operation, options, fun, state) {
  * @returns {Operation}
  */
 export const create = curry(function (sObject, attrs, state) {
-  let { connection, references } = state;
-  const finalAttrs = expandReferences(state, attrs);
+  let { connection } = state;
+  const finalAttrs = expandReferences(attrs)(state);
   console.info(`Creating ${sObject}`, finalAttrs);
 
   return connection.create(sObject, finalAttrs).then(function (recordResult) {
@@ -227,8 +224,8 @@ export const create = curry(function (sObject, attrs, state) {
  * @returns {Operation}
  */
 export const createIf = curry(function (logical, sObject, attrs, state) {
-  let { connection, references } = state;
-  const finalAttrs = expandReferences(state, attrs);
+  let { connection } = state;
+  const finalAttrs = expandReferences(attrs)(state);
   if (logical) {
     console.info(`Creating ${sObject}`, finalAttrs);
   } else {
@@ -266,8 +263,8 @@ export const createIf = curry(function (logical, sObject, attrs, state) {
  * @returns {Operation}
  */
 export const upsert = curry(function (sObject, externalId, attrs, state) {
-  let { connection, references } = state;
-  const finalAttrs = expandReferences(state, attrs);
+  let { connection } = state;
+  const finalAttrs = expandReferences(attrs)(state);
   console.info(
     `Upserting ${sObject} with externalId`,
     externalId,
@@ -309,8 +306,8 @@ export const upsertIf = curry(function (
   attrs,
   state
 ) {
-  let { connection, references } = state;
-  const finalAttrs = expandReferences(state, attrs);
+  let { connection } = state;
+  const finalAttrs = expandReferences(attrs)(state);
   if (logical) {
     console.info(
       `Upserting ${sObject} with externalId`,
@@ -354,8 +351,8 @@ export const upsertIf = curry(function (
  * @returns {Operation}
  */
 export const update = curry(function (sObject, attrs, state) {
-  let { connection, references } = state;
-  const finalAttrs = expandReferences(state, attrs);
+  let { connection } = state;
+  const finalAttrs = expandReferences(attrs)(state);
   console.info(`Updating ${sObject}`, finalAttrs);
 
   return connection.update(sObject, finalAttrs).then(function (recordResult) {
@@ -481,50 +478,6 @@ function cleanupState(state) {
  */
 export function steps(...operations) {
   return flatten(operations);
-}
-
-/**
- * Recursively expand object|number|string|boolean|array, each time resolving function calls and returning the resolved values
- * @param {any} thing - Thing to expand
- * @returns {object|number|string|boolean|array} expandedResult
- */
-export function recursivelyExpandReferences(thing) {
-  return state => {
-    if (typeof thing !== 'object')
-      return typeof thing == 'function' ? thing(state) : thing;
-    let result = mapValues(function (value) {
-      if (Array.isArray(value)) {
-        return value.map(item => {
-          return recursivelyExpandReferences(item)(state);
-        });
-      } else {
-        return recursivelyExpandReferences(value)(state);
-      }
-    })(thing);
-    if (Array.isArray(thing)) result = Object.values(result);
-    return result;
-  };
-}
-
-/**
- * Expands references.
- * @example
- * expandReferences(
- *   state,
- *   {
- *     attr1: "foo",
- *     attr2: "bar"
- *   }
- * )
- * @function
- * @param {State} state - Runtime state.
- * @param {Object} attrs - Field attributes for the new object.
- * @returns {State}
- */
-function expandReferences(state, attrs) {
-  return mapValues(function (value) {
-    return typeof value == 'function' ? value(state) : value;
-  })(attrs);
 }
 
 export { lookup, relationship } from './sourceHelpers';

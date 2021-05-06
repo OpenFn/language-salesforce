@@ -19,7 +19,7 @@
     "lib/"
   ],
   "dependencies": {
-    "@openfn/language-common": "1.2.6",
+    "@openfn/language-common": "1.2.8",
     "JSONPath": "^0.10.0",
     "jsforce": "^1.9.3",
     "lodash-fp": "^0.10.2",
