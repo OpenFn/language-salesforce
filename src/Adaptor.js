@@ -226,6 +226,8 @@ export const create = curry(function (sObject, attrs, state) {
 export const createIf = curry(function (logical, sObject, attrs, state) {
   let { connection } = state;
   const finalAttrs = expandReferences(attrs)(state);
+  logical = expandReferences(logical)(state);
+  
   if (logical) {
     console.info(`Creating ${sObject}`, finalAttrs);
   } else {
@@ -309,7 +311,7 @@ export const upsertIf = curry(function (
   let { connection } = state;
   const finalAttrs = expandReferences(attrs)(state);
   logical = expandReferences(logical)(state);
-  
+
   if (logical) {
     console.info(
       `Upserting ${sObject} with externalId`,
