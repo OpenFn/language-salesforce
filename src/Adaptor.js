@@ -308,6 +308,8 @@ export const upsertIf = curry(function (
 ) {
   let { connection } = state;
   const finalAttrs = expandReferences(attrs)(state);
+  logical = expandReferences(logical)(state);
+  
   if (logical) {
     console.info(
       `Upserting ${sObject} with externalId`,
