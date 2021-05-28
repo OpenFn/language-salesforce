@@ -93,6 +93,7 @@ export const retrieve = curry(function (sObject, id, callback, state) {
  */
 export const query = curry(function (qs, state) {
   let { connection } = state;
+  qs = expandReferences(qs)(state)
   console.log(`Executing query: ${qs}`);
 
   return connection.query(qs, function (err, result) {
