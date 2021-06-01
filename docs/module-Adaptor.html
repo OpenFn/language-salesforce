@@ -78,6 +78,12 @@
         
             <dt><a href="module-Adaptor-describe.html">describe</a></dt>
             <dd></dd>
+        
+            <dt><a href="module-Adaptor-lookup.html">lookup</a></dt>
+            <dd></dd>
+        
+            <dt><a href="module-Adaptor-relationship.html">relationship</a></dt>
+            <dd></dd>
         </dl>
     
 
@@ -199,7 +205,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Adaptor.js.html">Adaptor.js</a>, <a href="Adaptor.js.html#line527">line 527</a>
+        <a href="Adaptor.js.html">Adaptor.js</a>, <a href="Adaptor.js.html#line555">line 555</a>
     </li></ul></dd>
     
 
@@ -359,7 +365,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Adaptor.js.html">Adaptor.js</a>, <a href="Adaptor.js.html#line608">line 608</a>
+        <a href="Adaptor.js.html">Adaptor.js</a>, <a href="Adaptor.js.html#line636">line 636</a>
     </li></ul></dd>
     
 
@@ -531,7 +537,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Adaptor.js.html">Adaptor.js</a>, <a href="Adaptor.js.html#line580">line 580</a>
+        <a href="Adaptor.js.html">Adaptor.js</a>, <a href="Adaptor.js.html#line608">line 608</a>
     </li></ul></dd>
     
 
@@ -576,195 +582,6 @@
     
 
 
-
-
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id="~expandReferences"><span class="type-signature">(inner) </span>expandReferences<span class="signature">(state, attrs)</span><span class="type-signature"> &rarr; {State}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    Expands references.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>state</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">State</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Runtime state.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>attrs</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Object</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Field attributes for the new object.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Adaptor.js.html">Adaptor.js</a>, <a href="Adaptor.js.html#line668">line 668</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">State</span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-
-
-    <h5>Example</h5>
-    
-    <pre class="prettyprint"><code>expandReferences(
-  state,
-  {
-    attr1: "foo",
-    attr2: "bar"
-  }
-)</code></pre>
 
 
 
@@ -875,7 +692,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Adaptor.js.html">Adaptor.js</a>, <a href="Adaptor.js.html#line554">line 554</a>
+        <a href="Adaptor.js.html">Adaptor.js</a>, <a href="Adaptor.js.html#line582">line 582</a>
     </li></ul></dd>
     
 
@@ -925,177 +742,6 @@
     <h5>Example</h5>
     
     <pre class="prettyprint"><code>login(state)</code></pre>
-
-
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id="~recursivelyExpandReferences"><span class="type-signature">(inner) </span>recursivelyExpandReferences<span class="signature">(thing)</span><span class="type-signature"> &rarr; {object|number|string|boolean|array}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    Recursively expand object|number|string|boolean|array, each time resolving function calls and returning the resolved values
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>thing</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">any</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Thing to expand</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Adaptor.js.html">Adaptor.js</a>, <a href="Adaptor.js.html#line635">line 635</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    expandedResult
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">object</span>
-|
-
-<span class="param-type">number</span>
-|
-
-<span class="param-type">string</span>
-|
-
-<span class="param-type">boolean</span>
-|
-
-<span class="param-type">array</span>
-
-
-    </dd>
-</dl>
-
-    
-
-
 
 
 
@@ -1157,7 +803,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Adaptor.js.html">Adaptor.js</a>, <a href="Adaptor.js.html#line625">line 625</a>
+        <a href="Adaptor.js.html">Adaptor.js</a>, <a href="Adaptor.js.html#line653">line 653</a>
     </li></ul></dd>
     
 
@@ -1322,7 +968,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Adaptor.js.html">Adaptor.js</a>, <a href="Adaptor.js.html#line163">line 163</a>
+        <a href="Adaptor.js.html">Adaptor.js</a>, <a href="Adaptor.js.html#line150">line 150</a>
     </li></ul></dd>
     
 
@@ -1479,7 +1125,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Adaptor.js.html">Adaptor.js</a>, <a href="Adaptor.js.html#line157">line 157</a>
+        <a href="Adaptor.js.html">Adaptor.js</a>, <a href="Adaptor.js.html#line144">line 144</a>
     </li></ul></dd>
     
 
@@ -1509,13 +1155,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Adaptor.html">Adaptor</a></li><li><a href="module-FakeAdaptor.html">FakeAdaptor</a></li></ul><h3>Classes</h3><ul><li><a href="module-Adaptor.bulk.html">bulk</a></li><li><a href="module-Adaptor.create.html">create</a></li><li><a href="module-Adaptor.createIf.html">createIf</a></li><li><a href="module-Adaptor.describe.html">describe</a></li><li><a href="module-Adaptor.query.html">query</a></li><li><a href="module-Adaptor.retrieve.html">retrieve</a></li><li><a href="module-Adaptor.update.html">update</a></li><li><a href="module-Adaptor.upsert.html">upsert</a></li><li><a href="module-Adaptor.upsertIf.html">upsertIf</a></li><li><a href="module-Adaptor-describe.html">describe</a></li></ul><h3>Global</h3><ul><li><a href="global.html#lookup">lookup</a></li><li><a href="global.html#relationship">relationship</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Adaptor.html">Adaptor</a></li><li><a href="module-FakeAdaptor.html">FakeAdaptor</a></li></ul><h3>Classes</h3><ul><li><a href="lookup.html">lookup</a></li><li><a href="module-Adaptor.bulk.html">bulk</a></li><li><a href="module-Adaptor.create.html">create</a></li><li><a href="module-Adaptor.createIf.html">createIf</a></li><li><a href="module-Adaptor.describe.html">describe</a></li><li><a href="module-Adaptor.query.html">query</a></li><li><a href="module-Adaptor.retrieve.html">retrieve</a></li><li><a href="module-Adaptor.update.html">update</a></li><li><a href="module-Adaptor.upsert.html">upsert</a></li><li><a href="module-Adaptor.upsertIf.html">upsertIf</a></li><li><a href="module-Adaptor-describe.html">describe</a></li><li><a href="module-Adaptor-lookup.html">lookup</a></li><li><a href="module-Adaptor-relationship.html">relationship</a></li><li><a href="relationship.html">relationship</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.6</a> on Fri Feb 19 2021 10:15:52 GMT+0000 (Greenwich Mean Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.6</a> on Tue Jun 01 2021 18:38:56 GMT+0000 (Greenwich Mean Time)
 </footer>
 
 <script> prettyPrint(); </script>

@@ -31,9 +31,10 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.lookup = lookup;
+exports.relationship = relationship;
 exports.execute = execute;
 exports.steps = steps;
-exports.recursivelyExpandReferences = recursivelyExpandReferences;
 Object.defineProperty(exports, "alterState", {
   enumerable: true,
   get: function () {
@@ -154,18 +155,6 @@ Object.defineProperty(exports, "toArray", {
     return _languageCommon.toArray;
   }
 });
-Object.defineProperty(exports, "lookup", {
-  enumerable: true,
-  get: function () {
-    return _sourceHelpers.lookup;
-  }
-});
-Object.defineProperty(exports, "relationship", {
-  enumerable: true,
-  get: function () {
-    return _sourceHelpers.relationship;
-  }
-});
 exports.reference = exports.update = exports.upsertIf = exports.upsert = exports.createIf = exports.create = exports.bulk = exports.query = exports.retrieve = exports.describe = void 0;
 
 var _languageCommon = require("@openfn/language-common");
@@ -173,8 +162,6 @@ var _languageCommon = require("@openfn/language-common");
 var _jsforce = _interopRequireDefault(require("jsforce"));
 
 var _lodashFp = require("lodash-fp");
-
-var _sourceHelpers = require("./sourceHelpers");
 
 var _axios = _interopRequireDefault(require("axios"));
 
@@ -194,6 +181,53 @@ function _interopRequireDefault(obj) { return obj &amp;&amp; obj.__esModule ? ob
  */
 
 /**
+ * Adds a lookup or 'dome insert' to a record.
+ * @public
+ * @example
+ *  lookup("relationship_name__r", "externalID on related object", "$.path")
+ * @constructor
+ * @param {string} relationshipName - `__r` relationship field on the record.
+ * @param {string} externalId - Salesforce ExternalID field.
+ * @param {string} path - JSONPath to data source.
+ * @returns {object}
+ */
+function lookup(relationshipName, externalId, path) {
+  return field(relationshipName, state => {
+    return {
+      [externalId]: sourceValue(path)(state)
+    };
+  });
+}
+/**
+ * Adds a lookup relation or 'dome insert' to a record.
+ * @public
+ * @example
+ * Data Sourced Value:
+ *  relationship("relationship_name__r", "externalID on related object", dataSource("path"))
+ * Fixed Value:
+ *  relationship("relationship_name__r", "externalID on related object", "hello world")
+ * @constructor
+ * @param {string} relationshipName - `__r` relationship field on the record.
+ * @param {string} externalId - Salesforce ExternalID field.
+ * @param {string} dataSource - resolvable source.
+ * @returns {object}
+ */
+
+
+function relationship(relationshipName, externalId, dataSource) {
+  return field(relationshipName, state => {
+    if (typeof dataSource == 'function') {
+      return {
+        [externalId]: dataSource(state)
+      };
+    }
+
+    return {
+      [externalId]: dataSource
+    };
+  });
+}
+/**
  * Outputs basic information about an sObject to `STDOUT`.
  * @public
  * @example
@@ -203,6 +237,8 @@ function _interopRequireDefault(obj) { return obj &amp;&amp; obj.__esModule ? ob
  * @param {State} state - Runtime state.
  * @returns {State}
  */
+
+
 const describe = (0, _lodashFp.curry)(function (sObject, state) {
   let {
     connection
@@ -213,9 +249,6 @@ const describe = (0, _lodashFp.curry)(function (sObject, state) {
     return { ...state,
       references: [result, ...state.references]
     };
-  }).catch(function (err) {
-    console.error(err);
-    return err;
   });
 });
 /**
@@ -236,7 +269,7 @@ const retrieve = (0, _lodashFp.curry)(function (sObject, id, callback, state) {
   let {
     connection
   } = state;
-  const finalId = recursivelyExpandReferences(id)(state);
+  const finalId = (0, _languageCommon.expandReferences)(id)(state);
   return connection.sobject(sObject).retrieve(finalId).then(result => {
     return { ...state,
       references: [result, ...state.references]
@@ -247,13 +280,12 @@ const retrieve = (0, _lodashFp.curry)(function (sObject, id, callback, state) {
     }
 
     return state;
-  }).catch(function (err) {
-    console.error(err);
-    return err;
   });
 });
 /**
  * Execute an SOQL query.
+ * Note that in an event of a query error,
+ * error logs will be printed but the operation will not throw the error.
  * @public
  * @example
  * query(`SELECT Id FROM Patient__c WHERE Health_ID__c = '${state.data.field1}'`);
@@ -266,9 +298,9 @@ const retrieve = (0, _lodashFp.curry)(function (sObject, id, callback, state) {
 exports.retrieve = retrieve;
 const query = (0, _lodashFp.curry)(function (qs, state) {
   let {
-    connection,
-    references
+    connection
   } = state;
+  qs = (0, _languageCommon.expandReferences)(qs)(state);
   console.log(`Executing query: ${qs}`);
   return connection.query(qs, function (err, result) {
     if (err) {
@@ -302,8 +334,7 @@ const query = (0, _lodashFp.curry)(function (qs, state) {
 exports.query = query;
 const bulk = (0, _lodashFp.curry)(function (sObject, operation, options, fun, state) {
   let {
-    connection,
-    references
+    connection
   } = state;
   let {
     failOnError,
@@ -367,10 +398,9 @@ const bulk = (0, _lodashFp.curry)(function (sObject, operation, options, fun, st
 exports.bulk = bulk;
 const create = (0, _lodashFp.curry)(function (sObject, attrs, state) {
   let {
-    connection,
-    references
+    connection
   } = state;
-  const finalAttrs = expandReferences(state, attrs);
+  const finalAttrs = (0, _languageCommon.expandReferences)(attrs)(state);
   console.info(`Creating ${sObject}`, finalAttrs);
   return connection.create(sObject, finalAttrs).then(function (recordResult) {
     console.log('Result : ' + JSON.stringify(recordResult));
@@ -398,10 +428,10 @@ const create = (0, _lodashFp.curry)(function (sObject, attrs, state) {
 exports.create = create;
 const createIf = (0, _lodashFp.curry)(function (logical, sObject, attrs, state) {
   let {
-    connection,
-    references
+    connection
   } = state;
-  const finalAttrs = expandReferences(state, attrs);
+  const finalAttrs = (0, _languageCommon.expandReferences)(attrs)(state);
+  logical = (0, _languageCommon.expandReferences)(logical)(state);
 
   if (logical) {
     console.info(`Creating ${sObject}`, finalAttrs);
@@ -440,10 +470,9 @@ const createIf = (0, _lodashFp.curry)(function (logical, sObject, attrs, state) 
 exports.createIf = createIf;
 const upsert = (0, _lodashFp.curry)(function (sObject, externalId, attrs, state) {
   let {
-    connection,
-    references
+    connection
   } = state;
-  const finalAttrs = expandReferences(state, attrs);
+  const finalAttrs = (0, _languageCommon.expandReferences)(attrs)(state);
   console.info(`Upserting ${sObject} with externalId`, externalId, ':', finalAttrs);
   return connection.upsert(sObject, finalAttrs, externalId).then(function (recordResult) {
     console.log('Result : ' + JSON.stringify(recordResult));
@@ -472,10 +501,10 @@ const upsert = (0, _lodashFp.curry)(function (sObject, externalId, attrs, state)
 exports.upsert = upsert;
 const upsertIf = (0, _lodashFp.curry)(function (logical, sObject, externalId, attrs, state) {
   let {
-    connection,
-    references
+    connection
   } = state;
-  const finalAttrs = expandReferences(state, attrs);
+  const finalAttrs = (0, _languageCommon.expandReferences)(attrs)(state);
+  logical = (0, _languageCommon.expandReferences)(logical)(state);
 
   if (logical) {
     console.info(`Upserting ${sObject} with externalId`, externalId, ':', finalAttrs);
@@ -513,10 +542,9 @@ const upsertIf = (0, _lodashFp.curry)(function (logical, sObject, externalId, at
 exports.upsertIf = upsertIf;
 const update = (0, _lodashFp.curry)(function (sObject, attrs, state) {
   let {
-    connection,
-    references
+    connection
   } = state;
-  const finalAttrs = expandReferences(state, attrs);
+  const finalAttrs = (0, _languageCommon.expandReferences)(attrs)(state);
   console.info(`Updating ${sObject}`, finalAttrs);
   return connection.update(sObject, finalAttrs).then(function (recordResult) {
     console.log('Result : ' + JSON.stringify(recordResult));
@@ -652,52 +680,8 @@ function cleanupState(state) {
 
 function steps(...operations) {
   return (0, _lodashFp.flatten)(operations);
-}
-/**
- * Recursively expand object|number|string|boolean|array, each time resolving function calls and returning the resolved values
- * @param {any} thing - Thing to expand
- * @returns {object|number|string|boolean|array} expandedResult
- */
+} // Note that we expose the entire axios package to the user here.
 
-
-function recursivelyExpandReferences(thing) {
-  return state => {
-    if (typeof thing !== 'object') return typeof thing == 'function' ? thing(state) : thing;
-    let result = (0, _lodashFp.mapValues)(function (value) {
-      if (Array.isArray(value)) {
-        return value.map(item => {
-          return recursivelyExpandReferences(item)(state);
-        });
-      } else {
-        return recursivelyExpandReferences(value)(state);
-      }
-    })(thing);
-    if (Array.isArray(thing)) result = Object.values(result);
-    return result;
-  };
-}
-/**
- * Expands references.
- * @example
- * expandReferences(
- *   state,
- *   {
- *     attr1: "foo",
- *     attr2: "bar"
- *   }
- * )
- * @function
- * @param {State} state - Runtime state.
- * @param {Object} attrs - Field attributes for the new object.
- * @returns {State}
- */
-
-
-function expandReferences(state, attrs) {
-  return (0, _lodashFp.mapValues)(function (value) {
-    return typeof value == 'function' ? value(state) : value;
-  })(attrs);
-}
 
 exports.axios = _axios.default;
 </code></pre>
@@ -710,13 +694,13 @@ exports.axios = _axios.default;
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Adaptor.html">Adaptor</a></li><li><a href="module-FakeAdaptor.html">FakeAdaptor</a></li></ul><h3>Classes</h3><ul><li><a href="module-Adaptor.bulk.html">bulk</a></li><li><a href="module-Adaptor.create.html">create</a></li><li><a href="module-Adaptor.createIf.html">createIf</a></li><li><a href="module-Adaptor.describe.html">describe</a></li><li><a href="module-Adaptor.query.html">query</a></li><li><a href="module-Adaptor.retrieve.html">retrieve</a></li><li><a href="module-Adaptor.update.html">update</a></li><li><a href="module-Adaptor.upsert.html">upsert</a></li><li><a href="module-Adaptor.upsertIf.html">upsertIf</a></li><li><a href="module-Adaptor-describe.html">describe</a></li></ul><h3>Global</h3><ul><li><a href="global.html#lookup">lookup</a></li><li><a href="global.html#relationship">relationship</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Adaptor.html">Adaptor</a></li><li><a href="module-FakeAdaptor.html">FakeAdaptor</a></li></ul><h3>Classes</h3><ul><li><a href="lookup.html">lookup</a></li><li><a href="module-Adaptor.bulk.html">bulk</a></li><li><a href="module-Adaptor.create.html">create</a></li><li><a href="module-Adaptor.createIf.html">createIf</a></li><li><a href="module-Adaptor.describe.html">describe</a></li><li><a href="module-Adaptor.query.html">query</a></li><li><a href="module-Adaptor.retrieve.html">retrieve</a></li><li><a href="module-Adaptor.update.html">update</a></li><li><a href="module-Adaptor.upsert.html">upsert</a></li><li><a href="module-Adaptor.upsertIf.html">upsertIf</a></li><li><a href="module-Adaptor-describe.html">describe</a></li><li><a href="module-Adaptor-lookup.html">lookup</a></li><li><a href="module-Adaptor-relationship.html">relationship</a></li><li><a href="relationship.html">relationship</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.6</a> on Fri Feb 19 2021 10:15:52 GMT+0000 (Greenwich Mean Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.6</a> on Tue Jun 01 2021 18:38:56 GMT+0000 (Greenwich Mean Time)
 </footer>
 
 <script> prettyPrint(); </script>

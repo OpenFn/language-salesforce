@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Class: create</title>
+    <title>JSDoc: Class: lookup</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">Class: create</h1>
+    <h1 class="page-title">Class: lookup</h1>
 
     
 
@@ -29,7 +29,7 @@
 <header>
     
         <h2><span class="attribs"><span class="type-signature"></span></span>
-            <span class="ancestors"><a href="module-Adaptor.html">Adaptor</a>.</span>create<span class="signature">(logical, sObject, attrs, state)</span><span class="type-signature"> &rarr; {Operation}</span></h2>
+            <span class="ancestors"><a href="module-Adaptor.html">Adaptor</a>~</span>lookup<span class="signature">(relationshipName, externalId, path)</span><span class="type-signature"> &rarr; {object}</span></h2>
         
     
 </header>
@@ -42,7 +42,7 @@
     
 
     
-    <h4 class="name" id="create"><span class="type-signature"></span>new create<span class="signature">(logical, sObject, attrs, state)</span><span class="type-signature"> &rarr; {Operation}</span></h4>
+    <h4 class="name" id="lookup"><span class="type-signature"></span>new lookup<span class="signature">(relationshipName, externalId, path)</span><span class="type-signature"> &rarr; {object}</span></h4>
     
 
     
@@ -50,7 +50,7 @@
 
 
 <div class="description">
-    Create a new object if conditions are met.
+    Adds a lookup or 'dome insert' to a record.
 </div>
 
 
@@ -86,13 +86,13 @@
 
         <tr>
             
-                <td class="name"><code>logical</code></td>
+                <td class="name"><code>relationshipName</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">boolean</span>
+<span class="param-type">string</span>
 
 
             
@@ -102,20 +102,20 @@
 
             
 
-            <td class="description last">a logical statement that will be evaluated.</td>
+            <td class="description last">`__r` relationship field on the record.</td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>sObject</code></td>
+                <td class="name"><code>externalId</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">string</span>
 
 
             
@@ -125,20 +125,20 @@
 
             
 
-            <td class="description last">API name of the sObject.</td>
+            <td class="description last">Salesforce ExternalID field.</td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>attrs</code></td>
+                <td class="name"><code>path</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">Object</span>
+<span class="param-type">string</span>
 
 
             
@@ -148,30 +148,7 @@
 
             
 
-            <td class="description last">Field attributes for the new object.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>state</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">State</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Runtime state.</td>
+            <td class="description last">JSONPath to data source.</td>
         </tr>
 
     
@@ -212,7 +189,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Adaptor.js.html">Adaptor.js</a>, <a href="Adaptor.js.html#line400">line 400</a>
+        <a href="Adaptor.js.html">Adaptor.js</a>, <a href="Adaptor.js.html#line166">line 166</a>
     </li></ul></dd>
     
 
@@ -248,7 +225,7 @@
     </dt>
     <dd>
         
-<span class="param-type">Operation</span>
+<span class="param-type">object</span>
 
 
     </dd>
@@ -261,10 +238,7 @@
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>createIf(true, 'obj_name', {
-  attr1: "foo",
-  attr2: "bar"
-})</code></pre>
+    <pre class="prettyprint"><code>lookup("relationship_name__r", "externalID on related object", "$.path")</code></pre>
 
 
 
