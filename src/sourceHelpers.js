@@ -6,7 +6,7 @@ import { sourceValue, field } from '@openfn/language-common';
  * @public
  * @example
  *  lookup("relationship_name__r", "externalID on related object", "$.path")
- * @constructor
+ * @function
  * @param {string} relationshipName - `__r` relationship field on the record.
  * @param {string} externalId - Salesforce ExternalID field.
  * @param {string} path - JSONPath to data source.
@@ -26,7 +26,7 @@ export function lookup(relationshipName, externalId, path) {
  *  relationship("relationship_name__r", "externalID on related object", dataSource("path"))
  * Fixed Value:
  *  relationship("relationship_name__r", "externalID on related object", "hello world")
- * @constructor
+ * @function
  * @param {string} relationshipName - `__r` relationship field on the record.
  * @param {string} externalId - Salesforce ExternalID field.
  * @param {string} dataSource - resolvable source.
