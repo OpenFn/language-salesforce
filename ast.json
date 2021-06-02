@@ -1,6 +1,134 @@
 {
   "operations": [
     {
+      "name": "lookup",
+      "params": [
+        "relationshipName",
+        "externalId",
+        "path"
+      ],
+      "docs": {
+        "description": "Adds a lookup or 'dome insert' to a record.",
+        "tags": [
+          {
+            "title": "public",
+            "description": null,
+            "type": null
+          },
+          {
+            "title": "example",
+            "description": "lookup(\"relationship_name__r\", \"externalID on related object\", \"$.path\")"
+          },
+          {
+            "title": "constructor",
+            "description": null,
+            "type": null,
+            "name": null
+          },
+          {
+            "title": "param",
+            "description": "`__r` relationship field on the record.",
+            "type": {
+              "type": "NameExpression",
+              "name": "string"
+            },
+            "name": "relationshipName"
+          },
+          {
+            "title": "param",
+            "description": "Salesforce ExternalID field.",
+            "type": {
+              "type": "NameExpression",
+              "name": "string"
+            },
+            "name": "externalId"
+          },
+          {
+            "title": "param",
+            "description": "JSONPath to data source.",
+            "type": {
+              "type": "NameExpression",
+              "name": "string"
+            },
+            "name": "path"
+          },
+          {
+            "title": "returns",
+            "description": null,
+            "type": {
+              "type": "NameExpression",
+              "name": "object"
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "name": "relationship",
+      "params": [
+        "relationshipName",
+        "externalId",
+        "dataSource"
+      ],
+      "docs": {
+        "description": "Adds a lookup relation or 'dome insert' to a record.",
+        "tags": [
+          {
+            "title": "public",
+            "description": null,
+            "type": null
+          },
+          {
+            "title": "example",
+            "description": "Data Sourced Value:\n relationship(\"relationship_name__r\", \"externalID on related object\", dataSource(\"path\"))\nFixed Value:\n relationship(\"relationship_name__r\", \"externalID on related object\", \"hello world\")"
+          },
+          {
+            "title": "constructor",
+            "description": null,
+            "type": null,
+            "name": null
+          },
+          {
+            "title": "param",
+            "description": "`__r` relationship field on the record.",
+            "type": {
+              "type": "NameExpression",
+              "name": "string"
+            },
+            "name": "relationshipName"
+          },
+          {
+            "title": "param",
+            "description": "Salesforce ExternalID field.",
+            "type": {
+              "type": "NameExpression",
+              "name": "string"
+            },
+            "name": "externalId"
+          },
+          {
+            "title": "param",
+            "description": "resolvable source.",
+            "type": {
+              "type": "NameExpression",
+              "name": "string"
+            },
+            "name": "dataSource"
+          },
+          {
+            "title": "returns",
+            "description": null,
+            "type": {
+              "type": "NameExpression",
+              "name": "object"
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
       "name": "steps",
       "params": [
         null
