@@ -512,7 +512,6 @@ function cleanupState(state) {
 
 /**
  * Flattens an array of operations.
- * @public
  * @example
  * steps(
  *   createIf(params),
