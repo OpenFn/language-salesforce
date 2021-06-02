@@ -129,40 +129,6 @@
       "valid": true
     },
     {
-      "name": "steps",
-      "params": [
-        null
-      ],
-      "docs": {
-        "description": "Flattens an array of operations.",
-        "tags": [
-          {
-            "title": "public",
-            "description": null,
-            "type": null
-          },
-          {
-            "title": "example",
-            "description": "steps(\n  createIf(params),\n  update(params)\n)"
-          },
-          {
-            "title": "function",
-            "description": null,
-            "name": null
-          },
-          {
-            "title": "returns",
-            "description": null,
-            "type": {
-              "type": "NameExpression",
-              "name": "Array"
-            }
-          }
-        ]
-      },
-      "valid": false
-    },
-    {
       "name": "describe",
       "params": [
         "sObject",
