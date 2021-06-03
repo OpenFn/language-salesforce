@@ -14,6 +14,8 @@
 import {
   execute as commonExecute,
   expandReferences,
+  field,
+  sourceValue,
 } from '@openfn/language-common';
 import jsforce from 'jsforce';
 import { curry, flatten } from 'lodash-fp';
@@ -133,7 +135,7 @@ export const retrieve = curry(function (sObject, id, callback, state) {
  */
 export const query = curry(function (qs, state) {
   let { connection } = state;
-  qs = expandReferences(qs)(state)
+  qs = expandReferences(qs)(state);
   console.log(`Executing query: ${qs}`);
 
   return connection.query(qs, function (err, result) {
@@ -268,7 +270,7 @@ export const createIf = curry(function (logical, sObject, attrs, state) {
   let { connection } = state;
   const finalAttrs = expandReferences(attrs)(state);
   logical = expandReferences(logical)(state);
-  
+
   if (logical) {
     console.info(`Creating ${sObject}`, finalAttrs);
   } else {
@@ -523,7 +525,6 @@ function cleanupState(state) {
 export function steps(...operations) {
   return flatten(operations);
 }
-
 
 // Note that we expose the entire axios package to the user here.
 import axios from 'axios';
