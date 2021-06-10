@@ -7,6 +7,15 @@ function steps(...operations) {
   return flatten(operations);
 }
 
+function relationship(relationshipName, externalId, dataSource) {
+  return field(relationshipName, state => {
+    if (typeof dataSource == 'function') {
+      return { [externalId]: dataSource(state) };
+    }
+    return { [externalId]: dataSource };
+  });
+}
+
 // TODO: use the one from language-common
 function expandReferences(attrs, state) {
   return mapValues(function (value) {
@@ -190,8 +199,6 @@ export {
   upsertIf,
   query,
 };
-
-export { lookup, relationship } from './sourceHelpers';
 
 export {
   alterState,

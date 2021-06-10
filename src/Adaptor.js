@@ -21,23 +21,6 @@ import jsforce from 'jsforce';
 import { curry, flatten } from 'lodash-fp';
 
 /**
- * Adds a lookup or 'dome insert' to a record.
- * @public
- * @example
- *  lookup("relationship_name__r", "externalID on related object", "$.path")
- * @constructor
- * @param {string} relationshipName - `__r` relationship field on the record.
- * @param {string} externalId - Salesforce ExternalID field.
- * @param {string} path - JSONPath to data source.
- * @returns {object}
- */
-export function lookup(relationshipName, externalId, path) {
-  return field(relationshipName, state => {
-    return { [externalId]: sourceValue(path)(state) };
-  });
-}
-
-/**
  * Adds a lookup relation or 'dome insert' to a record.
  * @public
  * @example
