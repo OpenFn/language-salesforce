@@ -176,18 +176,17 @@ export const bulk = curry(function (sObject, operation, options, fun, state) {
     console.info('Executing batch.');
     batch.execute(finalAttrs);
 
+    batch.on('error', function (err) {
+      job.close();
+      console.error('Request error:');
+      reject(err);
+    });
+
     return batch
       .on('queue', function (batchInfo) {
         console.info(batchInfo);
         const batchId = batchInfo.id;
         var batch = job.batch(batchId);
-
-        batch.on('error', function (err) {
-          job.close();
-          console.error('Request error:');
-          throw err;
-        });
-
         batch.poll(3 * 1000, 120 * 1000);
       })
       .then(res => {
@@ -198,7 +197,7 @@ export const bulk = curry(function (sObject, operation, options, fun, state) {
 
         if (failOnError && errors.length > 0) {
           console.error('Errors detected:');
-          throw res;
+          reject(res);
         } else {
           console.log('Result : ' + JSON.stringify(res, null, 2));
           return {
