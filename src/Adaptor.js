@@ -157,6 +157,8 @@ export const bulk = curry(function (sObject, operation, options, fun, state) {
   let { failOnError, allowNoOp } = options;
   const finalAttrs = fun(state);
 
+  return new Promise((resolve, reject) => {
+
   if (allowNoOp && finalAttrs.length === 0) {
     console.info(
       `No items in ${sObject} array. Skipping bulk ${operation} operation.`
@@ -166,6 +168,8 @@ export const bulk = curry(function (sObject, operation, options, fun, state) {
 
   console.info(`Creating bulk ${operation} job for ${sObject}`, finalAttrs);
   const job = connection.bulk.createJob(sObject, operation, options);
+
+  job.on('error', err => reject(err));
 
   console.info('Creating batch for job.');
   var batch = job.createBatch();
@@ -204,6 +208,7 @@ export const bulk = curry(function (sObject, operation, options, fun, state) {
         };
       }
     });
+  })
 });
 
 /**
