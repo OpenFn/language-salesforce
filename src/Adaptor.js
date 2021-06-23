@@ -158,57 +158,56 @@ export const bulk = curry(function (sObject, operation, options, fun, state) {
   const finalAttrs = fun(state);
 
   return new Promise((resolve, reject) => {
+    if (allowNoOp && finalAttrs.length === 0) {
+      console.info(
+        `No items in ${sObject} array. Skipping bulk ${operation} operation.`
+      );
+      return state;
+    }
 
-  if (allowNoOp && finalAttrs.length === 0) {
-    console.info(
-      `No items in ${sObject} array. Skipping bulk ${operation} operation.`
-    );
-    return state;
-  }
+    console.info(`Creating bulk ${operation} job for ${sObject}`, finalAttrs);
+    const job = connection.bulk.createJob(sObject, operation, options);
 
-  console.info(`Creating bulk ${operation} job for ${sObject}`, finalAttrs);
-  const job = connection.bulk.createJob(sObject, operation, options);
+    job.on('error', err => reject(err));
 
-  job.on('error', err => reject(err));
+    console.info('Creating batch for job.');
+    var batch = job.createBatch();
 
-  console.info('Creating batch for job.');
-  var batch = job.createBatch();
+    console.info('Executing batch.');
+    batch.execute(finalAttrs);
 
-  console.info('Executing batch.');
-  batch.execute(finalAttrs);
+    return batch
+      .on('queue', function (batchInfo) {
+        console.info(batchInfo);
+        const batchId = batchInfo.id;
+        var batch = job.batch(batchId);
 
-  return batch
-    .on('queue', function (batchInfo) {
-      console.info(batchInfo);
-      const batchId = batchInfo.id;
-      var batch = job.batch(batchId);
+        batch.on('error', function (err) {
+          job.close();
+          console.error('Request error:');
+          throw err;
+        });
 
-      batch.on('error', function (err) {
+        batch.poll(3 * 1000, 120 * 1000);
+      })
+      .then(res => {
         job.close();
-        console.error('Request error:');
-        throw err;
-      });
+        const errors = res.filter(item => {
+          return item.success === false;
+        });
 
-      batch.poll(3 * 1000, 120 * 1000);
-    })
-    .then(res => {
-      job.close();
-      const errors = res.filter(item => {
-        return item.success === false;
+        if (failOnError && errors.length > 0) {
+          console.error('Errors detected:');
+          throw res;
+        } else {
+          console.log('Result : ' + JSON.stringify(res, null, 2));
+          return {
+            ...state,
+            references: [res, ...state.references],
+          };
+        }
       });
-
-      if (failOnError && errors.length > 0) {
-        console.error('Errors detected:');
-        throw res;
-      } else {
-        console.log('Result : ' + JSON.stringify(res, null, 2));
-        return {
-          ...state,
-          references: [res, ...state.references],
-        };
-      }
-    });
-  })
+  });
 });
 
 /**
