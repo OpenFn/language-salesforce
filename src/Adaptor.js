@@ -174,15 +174,16 @@ export const bulk = curry(function (sObject, operation, options, fun, state) {
         reject(err);
         // return console.error(err);
       }
-      // console.log(res);
-      for (var i = 0; i < res.length; i++) {
-        if (res[i].success) {
-          console.log(`#${i + 1} loaded successfully, id = ${res[i].id}`);
-        } else {
-          console.log(
-            `#${i + 1} error occurred, message = ${res[i].errors.join(', ')}`
-          );
-          reject();
+      if (res) {
+        for (var i = 0; i < res.length; i++) {
+          if (res[i].success) {
+            console.log(`#${i + 1} loaded successfully, id = ${res[i].id}`);
+          } else {
+            console.log(
+              `#${i + 1} error occurred, message = ${res[i].errors.join(', ')}`
+            );
+            reject();
+          }
         }
       }
     });
