@@ -180,7 +180,11 @@ export const bulk = curry(function (sObject, operation, options, fun, state) {
             console.log(`#${i + 1} loaded successfully, id = ${res[i].id}`);
           } else {
             console.log(
-              `#${i + 1} error occurred, message = ${res[i].errors.join(', ')}`
+              `#${i + 1} error occurred, message = ${JSON.stringify(
+                res[i],
+                null,
+                2
+              )}`
             );
             reject();
           }
