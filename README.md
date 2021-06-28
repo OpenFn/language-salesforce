@@ -47,6 +47,8 @@ API
 `field("key","value")`
 Returns `{ "key": "value" }`
 
+[`relationship()`](https://github.com/OpenFn/language-salesforce/blob/master/src/Adaptor.js#L23-L44)
+
 `create(sObject, fields ...)`
 Returns `state`
 
