@@ -8,7 +8,7 @@ Salesforce Language Pack for OpenFn.
 See [releases](https://github.com/OpenFn/language-salesforce/releases) for all
 changes.
 
-Intent
+## Intent
 ------
 
 Allow communication with Salesforce using a set of Lisp compatible expressions.
@@ -16,7 +16,7 @@ Allow communication with Salesforce using a set of Lisp compatible expressions.
 Using simple functions we can create a simplified API, simple enough to generate
 code from data.
 
-Expressions
+## Expressions
 -----------
 
 Expressions are a simplified set of function calls. Outlining the operations
@@ -41,35 +41,31 @@ create('vera__Boat__c', {
 })
 ```
 
-API
+## API
 ---
 
 `field("key","value")`
 Returns `{ "key": "value" }`
 
-[`relationship()`](https://github.com/OpenFn/language-salesforce/blob/master/src/Adaptor.js#L23-L44)
+[`relationship("relationship_name__r", "externalID", dataSource("path"))`](https://github.com/OpenFn/language-salesforce/blob/master/src/Adaptor.js#L23-L44)
 
-`create(sObject, fields ...)`
-Returns `state`
+[`describe("obj_name")`](https://github.com/OpenFn/language-salesforce/blob/master/src/Adaptor.js#L46-L71)
 
-`createIf(logical, sObject, fields ...)`
-Returns `state`
+[`query('queryString')`](https://github.com/OpenFn/language-salesforce/blob/master/src/Adaptor.js#L107-L136)
 
-`upsert(sObject, externalID, fields ...)`
-Returns `state`
+[`bulk('obj_name', 'operation', 'options', arrayOfFields)`](https://github.com/OpenFn/language-salesforce/blob/master/src/Adaptor.js#L138-L210)
 
-`steps( operations ... )`
-Returns `Array<Operation>`
+[`create('obj_name', fields())`](https://github.com/OpenFn/language-salesforce/blob/master/src/Adaptor.js#L212-L238)
 
-`map(<JSONPath>, <Operation>, state)`
-Wraps an operation around an iterable.
-Each operation receives a scoped version of the data for each of items
-found at the given path.
+[`createIf(logical, 'obj_name', fields())`](https://github.com/OpenFn/language-salesforce/blob/master/src/Adaptor.js#L240-L279)
 
-Returns `state`
+[`upsert(sObject, 'externalID', fields())`](https://github.com/OpenFn/language-salesforce/blob/master/src/Adaptor.js#L281-L315)
 
+[`upsertIf(logical, 'obj_name', 'externalID', fields())`](https://github.com/OpenFn/language-salesforce/blob/master/src/Adaptor.js#L317-L370)
 
-Development
+[`update('obj_name', fields())`](https://github.com/OpenFn/language-salesforce/blob/master/src/Adaptor.js#L372-L398)
+
+## Development
 -----------
 
 Clone the repo, run `npm install`.
@@ -80,7 +76,7 @@ Build the project using `make`.
 
 To build the docs for this repo, run `./node_modules/.bin/jsdoc --readme ./README.md ./lib -d docs`.
 
-Other
+## Other
 -----
 Create SOAP session
 ```sh
