@@ -162,6 +162,7 @@ export const bulk = curry(function (sObject, operation, options, fun, state) {
       console.info(
         `No items in ${sObject} array. Skipping bulk ${operation} operation.`
       );
+      resolve(state);
       return state;
     }
 
