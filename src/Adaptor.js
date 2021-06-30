@@ -191,13 +191,21 @@ export const bulk = curry(function (sObject, operation, options, fun, state) {
       })
       .then(res => {
         job.close();
-        const errors = res.filter(item => {
-          return item.success === false;
+        const errors = res
+          .map((r, i) => ({ ...r, position: i + 1 }))
+          .filter(item => {
+            return !item.success;
+          });
+
+        errors.forEach(err => {
+          err[`${options.extIdField}`] =
+            finalAttrs[err.position - 1][options.extIdField];
         });
 
         if (failOnError && errors.length > 0) {
           console.error('Errors detected:');
-          reject(res);
+
+          reject(JSON.stringify(errors, null, 2));
         } else {
           console.log('Result : ' + JSON.stringify(res, null, 2));
           return {
