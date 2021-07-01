@@ -209,6 +209,7 @@ export const bulk = curry(function (sObject, operation, options, fun, state) {
           reject(JSON.stringify(errors, null, 2));
         } else {
           console.log('Result : ' + JSON.stringify(res, null, 2));
+          resolve({ ...state, references: [res, ...state.references] });
           return {
             ...state,
             references: [res, ...state.references],
