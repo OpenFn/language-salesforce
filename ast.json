@@ -748,12 +748,12 @@
   "exports": [],
   "common": [
     {
-      "name": "alterState",
+      "name": "fn",
       "params": [
         "func"
       ],
       "docs": {
-        "description": "Runs a function using state.",
+        "description": "Creates a custom step (or operation) for more flexible job writing.",
         "tags": [
           {
             "title": "public",
@@ -762,7 +762,7 @@
           },
           {
             "title": "example",
-            "description": "alterState(state => {\n  // do some things to state\n  return state;\n})"
+            "description": "fn(state => {\n  // do some things to state\n  return state;\n});"
           },
           {
             "title": "function",
@@ -1082,7 +1082,7 @@
     {
       "name": "combine",
       "params": [
-        null
+        "operations"
       ],
       "docs": {
         "description": "Combines two operations into one",
@@ -1102,6 +1102,15 @@
             "name": null
           },
           {
+            "title": "param",
+            "description": "Operations to be performed.",
+            "type": {
+              "type": "NameExpression",
+              "name": "Operations"
+            },
+            "name": "operations"
+          },
+          {
             "title": "returns",
             "description": null,
             "type": {
@@ -1111,7 +1120,7 @@
           }
         ]
       },
-      "valid": false
+      "valid": true
     },
     {
       "name": "join",
@@ -1216,7 +1225,7 @@
     {
       "name": "fields",
       "params": [
-        null
+        "fields"
       ],
       "docs": {
         "description": "Zips key value pairs into an object.",
@@ -1236,6 +1245,15 @@
             "name": null
           },
           {
+            "title": "param",
+            "description": "a list of fields",
+            "type": {
+              "type": "NameExpression",
+              "name": "Fields"
+            },
+            "name": "fields"
+          },
+          {
             "title": "returns",
             "description": null,
             "type": {
@@ -1245,7 +1263,7 @@
           }
         ]
       },
-      "valid": false
+      "valid": true
     },
     {
       "name": "merge",
@@ -1328,7 +1346,7 @@
       "name": "arrayToString",
       "params": [
         "arr",
-        null
+        "separator"
       ],
       "docs": {
         "description": "Turns an array into a string, separated by X.",
@@ -1360,14 +1378,10 @@
             "title": "param",
             "description": "Separator string.",
             "type": {
-              "type": "OptionalType",
-              "expression": {
-                "type": "NameExpression",
-                "name": "string"
-              }
+              "type": "NameExpression",
+              "name": "string"
             },
-            "name": "separator",
-            "default": "''"
+            "name": "separator"
           },
           {
             "title": "returns",
@@ -1379,7 +1393,7 @@
           }
         ]
       },
-      "valid": false
+      "valid": true
     },
     {
       "name": "toArray",
@@ -1469,7 +1483,11 @@
     },
     {
       "name": "map",
-      "params": {},
+      "params": [
+        "path",
+        "operation",
+        "state"
+      ],
       "docs": {
         "description": "Scopes an array of data based on a JSONPath.\nUseful when the source data has `n` items you would like to map to\nan operation.\nThe operation will receive a slice of the data based of each item\nof the JSONPath provided.",
         "tags": [
@@ -1516,7 +1534,7 @@
           }
         ]
       },
-      "valid": false
+      "valid": true
     }
   ]
 }
