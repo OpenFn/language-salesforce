@@ -528,6 +528,7 @@ exports.axios = axios;
 
 export {
   alterState,
+  fn,
   arrayToString,
   beta,
   combine,
