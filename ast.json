@@ -265,7 +265,7 @@
           },
           {
             "title": "example",
-            "description": "bulk('Patient__c', 'insert', { failOnError: true }, state => {\n  return state.data.someArray.map(x => {\n    return { 'Age__c': x.age, 'Name': x.name }\n  })\n});"
+            "description": "bulk('Patient__c', 'insert', { failOnError: true, pollInterval: 3000, pollTimeout: 240000 }, state => {\n  return state.data.someArray.map(x => {\n    return { 'Age__c': x.age, 'Name': x.name }\n  })\n});"
           },
           {
             "title": "constructor",

@@ -139,7 +139,7 @@ export const query = curry(function (qs, state) {
  * Create and execute a bulk job.
  * @public
  * @example
- * bulk('Patient__c', 'insert', { failOnError: true }, state => {
+ * bulk('Patient__c', 'insert', { failOnError: true, pollInterval: 3000, pollTimeout: 240000 }, state => {
  *   return state.data.someArray.map(x => {
  *     return { 'Age__c': x.age, 'Name': x.name }
  *   })
@@ -154,7 +154,7 @@ export const query = curry(function (qs, state) {
  */
 export const bulk = curry(function (sObject, operation, options, fun, state) {
   let { connection } = state;
-  let { failOnError, allowNoOp } = options;
+  let { failOnError, allowNoOp, pollTimeout, pollInterval } = options;
   const finalAttrs = fun(state);
 
   return new Promise((resolve, reject) => {
@@ -165,6 +165,9 @@ export const bulk = curry(function (sObject, operation, options, fun, state) {
       resolve(state);
       return state;
     }
+
+    connection.bulk.pollTimeout = pollTimeout || 240000;
+    connection.bulk.pollInterval = pollInterval || 6000;
 
     console.info(`Creating bulk ${operation} job for ${sObject}`, finalAttrs);
     const job = connection.bulk.createJob(sObject, operation, options);
@@ -188,7 +191,7 @@ export const bulk = curry(function (sObject, operation, options, fun, state) {
         console.info(batchInfo);
         const batchId = batchInfo.id;
         var batch = job.batch(batchId);
-        batch.poll(3 * 1000, 120 * 1000);
+        // batch.poll(3 * 1000, 120 * 1000);
       })
       .then(res => {
         job.close();
