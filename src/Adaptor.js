@@ -153,8 +153,8 @@ export const query = curry(function (qs, state) {
  * @returns {Operation}
  */
 export const bulk = curry(function (sObject, operation, options, fun, state) {
-  let { connection } = state;
-  let { failOnError, allowNoOp, pollTimeout, pollInterval } = options;
+  const { connection } = state;
+  const { failOnError, allowNoOp, pollTimeout, pollInterval } = options;
   const finalAttrs = fun(state);
 
   return new Promise((resolve, reject) => {
@@ -166,8 +166,8 @@ export const bulk = curry(function (sObject, operation, options, fun, state) {
       return state;
     }
 
-    connection.bulk.pollTimeout = pollTimeout || 240000;
-    connection.bulk.pollInterval = pollInterval || 6000;
+    const timeout = pollTimeout || 240000;
+    const interval = pollInterval || 6000;
 
     console.info(`Creating bulk ${operation} job for ${sObject}`, finalAttrs);
     const job = connection.bulk.createJob(sObject, operation, options);
@@ -191,7 +191,7 @@ export const bulk = curry(function (sObject, operation, options, fun, state) {
         console.info(batchInfo);
         const batchId = batchInfo.id;
         var batch = job.batch(batchId);
-        // batch.poll(3 * 1000, 120 * 1000);
+        batch.poll(interval, timeout);
       })
       .then(res => {
         job.close();
