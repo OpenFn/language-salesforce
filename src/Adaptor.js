@@ -223,6 +223,42 @@ export const bulk = curry(function (sObject, operation, options, fun, state) {
 });
 
 /**
+ * Delete records of an object.
+ * @public
+ * @example
+ * delete('obj_name', [
+ *  '0060n00000JQWHYAA5',
+ *  '0090n00000JQEWHYAA5
+ * ])
+ * @constructor
+ * @param {String} sObject - API name of the sObject.
+ * @param {Object} attrs - Array of IDs of records to delete.
+ * @param {State} state - Runtime state.
+ * @returns {Operation}
+ */
+export const destroy = curry(function (sObject, attrs, state) {
+  let { connection } = state;
+
+  const finalAttrs = expandReferences(attrs)(state);
+  console.info(`Deleting ${sObject}`);
+
+  return connection.sobject(sObject).del(finalAttrs, function (err, rets) {
+    if (err) {
+      return console.error(err);
+    }
+    for (var i = 0; i < rets.length; i++) {
+      if (rets[i].success) {
+        console.log('Deleted Successfully : ' + rets[i].id);
+      }
+    }
+    return {
+      ...state,
+      references: [...state.references],
+    };
+  });
+});
+
+/**
  * Create a new object.
  * @public
  * @example
