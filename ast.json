@@ -296,7 +296,7 @@
             "description": "Options passed to the bulk api.",
             "type": {
               "type": "NameExpression",
-              "name": "String"
+              "name": "Object"
             },
             "name": "options"
           },
@@ -335,6 +335,7 @@
       "params": [
         "sObject",
         "attrs",
+        "options",
         "state"
       ],
       "docs": {
@@ -347,7 +348,7 @@
           },
           {
             "title": "example",
-            "description": "delete('obj_name', [\n '0060n00000JQWHYAA5',\n '0090n00000JQEWHYAA5\n])"
+            "description": "destroy('obj_name', [\n '0060n00000JQWHYAA5',\n '0090n00000JQEWHYAA5\n], { failOnError: true })"
           },
           {
             "title": "constructor",
@@ -372,6 +373,15 @@
               "name": "Object"
             },
             "name": "attrs"
+          },
+          {
+            "title": "param",
+            "description": "Options for the bulk delete operation.",
+            "type": {
+              "type": "NameExpression",
+              "name": "Object"
+            },
+            "name": "options"
           },
           {
             "title": "param",

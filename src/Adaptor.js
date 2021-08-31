@@ -147,7 +147,7 @@ export const query = curry(function (qs, state) {
  * @constructor
  * @param {String} sObject - API name of the sObject.
  * @param {String} operation - The bulk operation to be performed
- * @param {String} options - Options passed to the bulk api.
+ * @param {Object} options - Options passed to the bulk api.
  * @param {Function} fun - A function which takes state and returns an array.
  * @param {State} state - Runtime state.
  * @returns {Operation}
@@ -226,36 +226,41 @@ export const bulk = curry(function (sObject, operation, options, fun, state) {
  * Delete records of an object.
  * @public
  * @example
- * delete('obj_name', [
+ * destroy('obj_name', [
  *  '0060n00000JQWHYAA5',
  *  '0090n00000JQEWHYAA5
- * ])
+ * ], { failOnError: true })
  * @constructor
  * @param {String} sObject - API name of the sObject.
  * @param {Object} attrs - Array of IDs of records to delete.
+ * @param {Object} options - Options for the bulk delete operation.
  * @param {State} state - Runtime state.
  * @returns {Operation}
  */
-export const destroy = curry(function (sObject, attrs, state) {
+export const destroy = curry(function (sObject, attrs, options, state) {
   let { connection } = state;
-
   const finalAttrs = expandReferences(attrs)(state);
-  console.info(`Deleting ${sObject}`);
+  const { failOnError } = options;
+  console.info(`Deleting ${sObject} records`);
 
-  return connection.sobject(sObject).del(finalAttrs, function (err, rets) {
-    if (err) {
-      return console.error(err);
-    }
-    for (var i = 0; i < rets.length; i++) {
-      if (rets[i].success) {
-        console.log('Deleted Successfully : ' + rets[i].id);
-      }
-    }
-    return {
-      ...state,
-      references: [...state.references],
-    };
-  });
+  return connection
+    .sobject(sObject)
+    .del(finalAttrs)
+    .then(function (result) {
+      const successes = result.filter(r => r.success);
+      console.log('Sucessfully deleted: ', JSON.stringify(successes, null, 2));
+
+      const failures = result.filter(r => !r.success);
+      console.log('Failed to delete: ', JSON.stringify(failures, null, 2));
+
+      if (failOnError && result.some(r => !r.success))
+        throw 'Some deletes failed; exiting with failure code.';
+
+      return {
+        ...state,
+        references: [result, ...state.references],
+      };
+    });
 });
 
 /**
