@@ -242,7 +242,6 @@ export const destroy = curry(function (sObject, attrs, options, state) {
   const finalAttrs = expandReferences(attrs)(state);
   const { failOnError } = options;
   console.info(`Deleting ${sObject} records`);
-  console.info('Attrs', finalAttrs);
 
   return connection
     .sobject(sObject)
