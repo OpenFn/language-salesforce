@@ -376,7 +376,7 @@
           },
           {
             "title": "param",
-            "description": "Options for the bulk delete operation.",
+            "description": "Options for the destroy delete operation.",
             "type": {
               "type": "NameExpression",
               "name": "Object"

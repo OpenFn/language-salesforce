@@ -233,7 +233,7 @@ export const bulk = curry(function (sObject, operation, options, fun, state) {
  * @constructor
  * @param {String} sObject - API name of the sObject.
  * @param {Object} attrs - Array of IDs of records to delete.
- * @param {Object} options - Options for the bulk delete operation.
+ * @param {Object} options - Options for the destroy delete operation.
  * @param {State} state - Runtime state.
  * @returns {Operation}
  */
@@ -242,6 +242,7 @@ export const destroy = curry(function (sObject, attrs, options, state) {
   const finalAttrs = expandReferences(attrs)(state);
   const { failOnError } = options;
   console.info(`Deleting ${sObject} records`);
+  console.info('Attrs', finalAttrs);
 
   return connection
     .sobject(sObject)
