@@ -572,7 +572,6 @@ exports.axios = axios;
 
 export {
   alterState,
-  fn,
   arrayToString,
   beta,
   combine,
@@ -581,6 +580,7 @@ export {
   each,
   field,
   fields,
+  fn,
   http,
   humanProper,
   index,
@@ -589,6 +589,7 @@ export {
   map,
   merge,
   referencePath,
+  removeEmojis,
   source,
   sourceValue,
   toArray,
