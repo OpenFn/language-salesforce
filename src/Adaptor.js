@@ -589,7 +589,7 @@ export {
   map,
   merge,
   referencePath,
-  removeEmojis,
+  scrubEmojis,
   source,
   sourceValue,
   toArray,
