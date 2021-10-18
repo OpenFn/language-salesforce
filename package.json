@@ -23,7 +23,7 @@
     "ast.json"
   ],
   "dependencies": {
-    "@openfn/language-common": "1.6.1",
+    "@openfn/language-common": "1.6.2",
     "axios": "^0.21.1",
     "jsforce": "^1.10.0",
     "JSONPath": "^0.10.0",
