@@ -308,16 +308,11 @@ export const create = curry(function (sObject, attrs, state) {
  */
 export const createIf = curry(function (logical, sObject, attrs, state) {
   let { connection } = state;
-  const finalAttrs = expandReferences(attrs)(state);
   logical = expandReferences(logical)(state);
 
   if (logical) {
+    const finalAttrs = expandReferences(attrs)(state);
     console.info(`Creating ${sObject}`, finalAttrs);
-  } else {
-    console.info(`Not creating ${sObject} because logical is false.`);
-  }
-
-  if (logical) {
     return connection.create(sObject, finalAttrs).then(function (recordResult) {
       console.log('Result : ' + JSON.stringify(recordResult));
       return {
@@ -326,6 +321,7 @@ export const createIf = curry(function (logical, sObject, attrs, state) {
       };
     });
   } else {
+    console.info(`Not creating ${sObject} because logical is false.`);
     return {
       ...state,
     };
@@ -392,21 +388,17 @@ export const upsertIf = curry(function (
   state
 ) {
   let { connection } = state;
-  const finalAttrs = expandReferences(attrs)(state);
   logical = expandReferences(logical)(state);
 
   if (logical) {
+    const finalAttrs = expandReferences(attrs)(state);
     console.info(
       `Upserting ${sObject} with externalId`,
       externalId,
       ':',
       finalAttrs
     );
-  } else {
-    console.info(`Not upserting ${sObject} because logical is false.`);
-  }
 
-  if (logical) {
     return connection
       .upsert(sObject, finalAttrs, externalId)
       .then(function (recordResult) {
@@ -417,6 +409,7 @@ export const upsertIf = curry(function (
         };
       });
   } else {
+    console.info(`Not upserting ${sObject} because logical is false.`);
     return {
       ...state,
     };
