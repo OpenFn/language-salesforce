@@ -570,6 +570,7 @@ export {
   combine,
   dataPath,
   dataValue,
+  dateFns,
   each,
   field,
   fields,
