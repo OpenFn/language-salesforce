@@ -70,6 +70,12 @@ Object.defineProperty(exports, "dataValue", {
     return _languageCommon.dataValue;
   }
 });
+Object.defineProperty(exports, "dateFns", {
+  enumerable: true,
+  get: function () {
+    return _languageCommon.dateFns;
+  }
+});
 Object.defineProperty(exports, "each", {
   enumerable: true,
   get: function () {
@@ -86,6 +92,12 @@ Object.defineProperty(exports, "fields", {
   enumerable: true,
   get: function () {
     return _languageCommon.fields;
+  }
+});
+Object.defineProperty(exports, "fn", {
+  enumerable: true,
+  get: function () {
+    return _languageCommon.fn;
   }
 });
 Object.defineProperty(exports, "http", {
@@ -136,6 +148,12 @@ Object.defineProperty(exports, "referencePath", {
     return _languageCommon.referencePath;
   }
 });
+Object.defineProperty(exports, "scrubEmojis", {
+  enumerable: true,
+  get: function () {
+    return _languageCommon.scrubEmojis;
+  }
+});
 Object.defineProperty(exports, "source", {
   enumerable: true,
   get: function () {
@@ -154,7 +172,7 @@ Object.defineProperty(exports, "toArray", {
     return _languageCommon.toArray;
   }
 });
-exports.reference = exports.update = exports.upsertIf = exports.upsert = exports.createIf = exports.create = exports.bulk = exports.query = exports.retrieve = exports.describe = void 0;
+exports.reference = exports.update = exports.upsertIf = exports.upsert = exports.createIf = exports.create = exports.destroy = exports.bulk = exports.query = exports.retrieve = exports.describe = void 0;
 
 var _languageCommon = require("@openfn/language-common");
 
@@ -296,7 +314,7 @@ const query = (0, _lodashFp.curry)(function (qs, state) {
  * Create and execute a bulk job.
  * @public
  * @example
- * bulk('Patient__c', 'insert', { failOnError: true }, state => {
+ * bulk('Patient__c', 'insert', { failOnError: true, pollInterval: 3000, pollTimeout: 240000 }, state => {
  *   return state.data.someArray.map(x => {
  *     return { 'Age__c': x.age, 'Name': x.name }
  *   })
@@ -304,7 +322,7 @@ const query = (0, _lodashFp.curry)(function (qs, state) {
  * @constructor
  * @param {String} sObject - API name of the sObject.
  * @param {String} operation - The bulk operation to be performed
- * @param {String} options - Options passed to the bulk api.
+ * @param {Object} options - Options passed to the bulk api.
  * @param {Function} fun - A function which takes state and returns an array.
  * @param {State} state - Runtime state.
  * @returns {Operation}
@@ -312,51 +330,103 @@ const query = (0, _lodashFp.curry)(function (qs, state) {
 
 exports.query = query;
 const bulk = (0, _lodashFp.curry)(function (sObject, operation, options, fun, state) {
-  let {
+  const {
     connection
   } = state;
-  let {
+  const {
     failOnError,
-    allowNoOp
+    allowNoOp,
+    pollTimeout,
+    pollInterval
   } = options;
   const finalAttrs = fun(state);
+  return new Promise((resolve, reject) => {
+    if (allowNoOp &amp;&amp; finalAttrs.length === 0) {
+      console.info(`No items in ${sObject} array. Skipping bulk ${operation} operation.`);
+      resolve(state);
+      return state;
+    }
 
-  if (allowNoOp &amp;&amp; finalAttrs.length === 0) {
-    console.info(`No items in ${sObject} array. Skipping bulk ${operation} operation.`);
-    return state;
-  }
-
-  console.info(`Creating bulk ${operation} job for ${sObject}`, finalAttrs);
-  const job = connection.bulk.createJob(sObject, operation, options);
-  console.info('Creating batch for job.');
-  var batch = job.createBatch();
-  console.info('Executing batch.');
-  batch.execute(finalAttrs);
-  return batch.on('queue', function (batchInfo) {
-    console.info(batchInfo);
-    const batchId = batchInfo.id;
-    var batch = job.batch(batchId);
+    const timeout = pollTimeout || 240000;
+    const interval = pollInterval || 6000;
+    console.info(`Creating bulk ${operation} job for ${sObject}`, finalAttrs);
+    const job = connection.bulk.createJob(sObject, operation, options);
+    job.on('error', err => reject(err));
+    console.info('Creating batch for job.');
+    var batch = job.createBatch();
+    console.info('Executing batch.');
+    batch.execute(finalAttrs);
     batch.on('error', function (err) {
       job.close();
       console.error('Request error:');
-      throw err;
+      reject(err);
     });
-    batch.poll(3 * 1000, 120 * 1000);
-  }).then(res => {
-    job.close();
-    const errors = res.filter(item => {
-      return item.success === false;
-    });
+    return batch.on('queue', function (batchInfo) {
+      console.info(batchInfo);
+      const batchId = batchInfo.id;
+      var batch = job.batch(batchId);
+      batch.poll(interval, timeout);
+    }).then(res => {
+      job.close();
+      const errors = res.map((r, i) => ({ ...r,
+        position: i + 1
+      })).filter(item => {
+        return !item.success;
+      });
+      errors.forEach(err => {
+        err[`${options.extIdField}`] = finalAttrs[err.position - 1][options.extIdField];
+      });
 
-    if (failOnError &amp;&amp; errors.length > 0) {
-      console.error('Errors detected:');
-      throw res;
-    } else {
-      console.log('Result : ' + JSON.stringify(res, null, 2));
-      return { ...state,
-        references: [res, ...state.references]
-      };
-    }
+      if (failOnError &amp;&amp; errors.length > 0) {
+        console.error('Errors detected:');
+        reject(JSON.stringify(errors, null, 2));
+      } else {
+        console.log('Result : ' + JSON.stringify(res, null, 2));
+        resolve({ ...state,
+          references: [res, ...state.references]
+        });
+        return { ...state,
+          references: [res, ...state.references]
+        };
+      }
+    });
+  });
+});
+/**
+ * Delete records of an object.
+ * @public
+ * @example
+ * destroy('obj_name', [
+ *  '0060n00000JQWHYAA5',
+ *  '0090n00000JQEWHYAA5
+ * ], { failOnError: true })
+ * @constructor
+ * @param {String} sObject - API name of the sObject.
+ * @param {Object} attrs - Array of IDs of records to delete.
+ * @param {Object} options - Options for the destroy delete operation.
+ * @param {State} state - Runtime state.
+ * @returns {Operation}
+ */
+
+exports.bulk = bulk;
+const destroy = (0, _lodashFp.curry)(function (sObject, attrs, options, state) {
+  let {
+    connection
+  } = state;
+  const finalAttrs = (0, _languageCommon.expandReferences)(attrs)(state);
+  const {
+    failOnError
+  } = options;
+  console.info(`Deleting ${sObject} records`);
+  return connection.sobject(sObject).del(finalAttrs).then(function (result) {
+    const successes = result.filter(r => r.success);
+    console.log('Sucessfully deleted: ', JSON.stringify(successes, null, 2));
+    const failures = result.filter(r => !r.success);
+    console.log('Failed to delete: ', JSON.stringify(failures, null, 2));
+    if (failOnError &amp;&amp; result.some(r => !r.success)) throw 'Some deletes failed; exiting with failure code.';
+    return { ...state,
+      references: [result, ...state.references]
+    };
   });
 });
 /**
@@ -374,7 +444,7 @@ const bulk = (0, _lodashFp.curry)(function (sObject, operation, options, fun, st
  * @returns {Operation}
  */
 
-exports.bulk = bulk;
+exports.destroy = destroy;
 const create = (0, _lodashFp.curry)(function (sObject, attrs, state) {
   let {
     connection
@@ -409,16 +479,11 @@ const createIf = (0, _lodashFp.curry)(function (logical, sObject, attrs, state) 
   let {
     connection
   } = state;
-  const finalAttrs = (0, _languageCommon.expandReferences)(attrs)(state);
   logical = (0, _languageCommon.expandReferences)(logical)(state);
 
   if (logical) {
+    const finalAttrs = (0, _languageCommon.expandReferences)(attrs)(state);
     console.info(`Creating ${sObject}`, finalAttrs);
-  } else {
-    console.info(`Not creating ${sObject} because logical is false.`);
-  }
-
-  if (logical) {
     return connection.create(sObject, finalAttrs).then(function (recordResult) {
       console.log('Result : ' + JSON.stringify(recordResult));
       return { ...state,
@@ -426,6 +491,7 @@ const createIf = (0, _lodashFp.curry)(function (logical, sObject, attrs, state) 
       };
     });
   } else {
+    console.info(`Not creating ${sObject} because logical is false.`);
     return { ...state
     };
   }
@@ -482,16 +548,11 @@ const upsertIf = (0, _lodashFp.curry)(function (logical, sObject, externalId, at
   let {
     connection
   } = state;
-  const finalAttrs = (0, _languageCommon.expandReferences)(attrs)(state);
   logical = (0, _languageCommon.expandReferences)(logical)(state);
 
   if (logical) {
+    const finalAttrs = (0, _languageCommon.expandReferences)(attrs)(state);
     console.info(`Upserting ${sObject} with externalId`, externalId, ':', finalAttrs);
-  } else {
-    console.info(`Not upserting ${sObject} because logical is false.`);
-  }
-
-  if (logical) {
     return connection.upsert(sObject, finalAttrs, externalId).then(function (recordResult) {
       console.log('Result : ' + JSON.stringify(recordResult));
       return { ...state,
@@ -499,6 +560,7 @@ const upsertIf = (0, _lodashFp.curry)(function (logical, sObject, externalId, at
       };
     });
   } else {
+    console.info(`Not upserting ${sObject} because logical is false.`);
     return { ...state
     };
   }
@@ -671,13 +733,13 @@ exports.axios = _axios.default;</code></pre>
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Adaptor.html">Adaptor</a></li><li><a href="module-FakeAdaptor.html">FakeAdaptor</a></li></ul><h3>Classes</h3><ul><li><a href="module-Adaptor.bulk.html">bulk</a></li><li><a href="module-Adaptor.create.html">create</a></li><li><a href="module-Adaptor.createIf.html">createIf</a></li><li><a href="module-Adaptor.describe.html">describe</a></li><li><a href="module-Adaptor.query.html">query</a></li><li><a href="module-Adaptor.retrieve.html">retrieve</a></li><li><a href="module-Adaptor.update.html">update</a></li><li><a href="module-Adaptor.upsert.html">upsert</a></li><li><a href="module-Adaptor.upsertIf.html">upsertIf</a></li><li><a href="module-Adaptor-describe.html">describe</a></li><li><a href="module-Adaptor-relationship.html">relationship</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Adaptor.html">Adaptor</a></li><li><a href="module-FakeAdaptor.html">FakeAdaptor</a></li></ul><h3>Classes</h3><ul><li><a href="module-Adaptor.bulk.html">bulk</a></li><li><a href="module-Adaptor.create.html">create</a></li><li><a href="module-Adaptor.createIf.html">createIf</a></li><li><a href="module-Adaptor.describe.html">describe</a></li><li><a href="module-Adaptor.destroy.html">destroy</a></li><li><a href="module-Adaptor.query.html">query</a></li><li><a href="module-Adaptor.retrieve.html">retrieve</a></li><li><a href="module-Adaptor.update.html">update</a></li><li><a href="module-Adaptor.upsert.html">upsert</a></li><li><a href="module-Adaptor.upsertIf.html">upsertIf</a></li><li><a href="module-Adaptor-describe.html">describe</a></li><li><a href="module-Adaptor-relationship.html">relationship</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.6</a> on Thu Jun 10 2021 18:38:37 GMT+0000 (Greenwich Mean Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.6</a> on Wed Jan 26 2022 14:00:23 GMT+0000 (Greenwich Mean Time)
 </footer>
 
 <script> prettyPrint(); </script>

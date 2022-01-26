@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Class: describe</title>
+    <title>JSDoc: Class: destroy</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">Class: describe</h1>
+    <h1 class="page-title">Class: destroy</h1>
 
     
 
@@ -29,7 +29,7 @@
 <header>
     
         <h2><span class="attribs"><span class="type-signature"></span></span>
-            <span class="ancestors"><a href="module-Adaptor.html">Adaptor</a>~</span>describe<span class="signature">(sObject, state)</span><span class="type-signature"> &rarr; {State}</span></h2>
+            <span class="ancestors"><a href="module-Adaptor.html">Adaptor</a>.</span>destroy<span class="signature">(sObject, attrs, state)</span><span class="type-signature"> &rarr; {Operation}</span></h2>
         
     
 </header>
@@ -42,7 +42,7 @@
     
 
     
-    <h4 class="name" id="describe"><span class="type-signature"></span>new describe<span class="signature">(sObject, state)</span><span class="type-signature"> &rarr; {State}</span></h4>
+    <h4 class="name" id="destroy"><span class="type-signature"></span>new destroy<span class="signature">(sObject, attrs, state)</span><span class="type-signature"> &rarr; {Operation}</span></h4>
     
 
     
@@ -50,7 +50,7 @@
 
 
 <div class="description">
-    Outputs basic information about an sObject to `STDOUT`.
+    Create a new object.
 </div>
 
 
@@ -103,6 +103,29 @@
             
 
             <td class="description last">API name of the sObject.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>attrs</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Field attributes for the new object.</td>
         </tr>
 
     
@@ -166,7 +189,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Adaptor.js.html">Adaptor.js</a>, <a href="Adaptor.js.html#line211">line 211</a>
+        <a href="Adaptor.js.html">Adaptor.js</a>, <a href="Adaptor.js.html#line419">line 419</a>
     </li></ul></dd>
     
 
@@ -202,7 +225,7 @@
     </dt>
     <dd>
         
-<span class="param-type">State</span>
+<span class="param-type">Operation</span>
 
 
     </dd>
@@ -215,7 +238,10 @@
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>describe('obj_name')</code></pre>
+    <pre class="prettyprint"><code>create('obj_name', {
+  attr1: "foo",
+  attr2: "bar"
+})</code></pre>
 
 
 

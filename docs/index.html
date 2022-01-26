@@ -44,16 +44,18 @@
 
     <section>
         <article><h1>language-salesforce <a href="https://travis-ci.org/OpenFn/language-salesforce"><img src="https://travis-ci.org/OpenFn/language-salesforce.svg?branch=master" alt="Build Status"></a></h1>
-<p>Salesforce Language Pack for OpenFn.
-**See the main docs site: http://openfn.github.io/language-salesforce/ **</p>
+<p>Salesforce Language Pack for OpenFn. **See the main docs site:
+http://openfn.github.io/language-salesforce/ **</p>
 <h2>Release notes and deprecated CHANGELOG.md</h2>
 <p>See <a href="https://github.com/OpenFn/language-salesforce/releases">releases</a> for all
 changes.</p>
 <h2>Intent</h2>
+<hr>
 <p>Allow communication with Salesforce using a set of Lisp compatible expressions.</p>
 <p>Using simple functions we can create a simplified API, simple enough to generate
 code from data.</p>
 <h2>Expressions</h2>
+<hr>
 <p>Expressions are a simplified set of function calls. Outlining the operations
 needed to be performed.</p>
 <p>An uncompiled expression has no knowledge of the internals of the adaptor,
@@ -62,36 +64,34 @@ credentials or runtime environment.</p>
 inject the functions in.</p>
 <p>For example:</p>
 <pre class="prettyprint source lang-javascript"><code>describe('vera__Test_Event__c'),
-create('vera__Test_Event__c', {
-  vera__Test_Event_Name_Unique__c: &quot;hello from jsforce&quot;
-}),
-create('vera__Boat__c', {
-  Name: &quot;Catatafish redux!&quot;,
-  vera__Test_Event__c: reference(0)
-})
+  create('vera__Test_Event__c', {
+    vera__Test_Event_Name_Unique__c: 'hello from jsforce',
+  }),
+  create('vera__Boat__c', {
+    Name: 'Catatafish redux!',
+    vera__Test_Event__c: reference(0),
+  });
 </code></pre>
-<h2>API</h2>
-<p><code>field(&quot;key&quot;,&quot;value&quot;)</code>
-Returns <code>{ &quot;key&quot;: &quot;value&quot; }</code></p>
-<p><code>create(sObject, fields ...)</code>
-Returns <code>state</code></p>
-<p><code>createIf(logical, sObject, fields ...)</code>
-Returns <code>state</code></p>
-<p><code>upsert(sObject, externalID, fields ...)</code>
-Returns <code>state</code></p>
-<p><code>steps( operations ... )</code>
-Returns <code>Array&lt;Operation&gt;</code></p>
-<p><code>map(&lt;JSONPath&gt;, &lt;Operation&gt;, state)</code>
-Wraps an operation around an iterable.
-Each operation receives a scoped version of the data for each of items
-found at the given path.</p>
-<p>Returns <code>state</code></p>
+<h2>## API</h2>
+<p><code>field(&quot;key&quot;,&quot;value&quot;)</code> Returns <code>{ &quot;key&quot;: &quot;value&quot; }</code></p>
+<p><a href="https://github.com/OpenFn/language-salesforce/blob/master/src/Adaptor.js#L23-L44"><code>relationship(&quot;relationship_name__r&quot;, &quot;externalID&quot;, dataSource(&quot;path&quot;))</code></a></p>
+<p><a href="https://github.com/OpenFn/language-salesforce/blob/master/src/Adaptor.js#L46-L71"><code>describe(&quot;obj_name&quot;)</code></a></p>
+<p><a href="https://github.com/OpenFn/language-salesforce/blob/master/src/Adaptor.js#L107-L136"><code>query('queryString')</code></a></p>
+<p><a href="https://github.com/OpenFn/language-salesforce/blob/master/src/Adaptor.js#L138-L210"><code>bulk('obj_name', 'operation', 'options', arrayOfFields)</code></a></p>
+<p><a href="https://github.com/OpenFn/language-salesforce/blob/master/src/Adaptor.js#L212-L238"><code>create('obj_name', fields())</code></a></p>
+<p><a href="https://github.com/OpenFn/language-salesforce/blob/master/src/Adaptor.js#225-259"><code>destroy('obj_name', fields())</code></a></p>
+<p><a href="https://github.com/OpenFn/language-salesforce/blob/master/src/Adaptor.js#L240-L279"><code>createIf(logical, 'obj_name', fields())</code></a></p>
+<p><a href="https://github.com/OpenFn/language-salesforce/blob/master/src/Adaptor.js#L281-L315"><code>upsert(sObject, 'externalID', fields())</code></a></p>
+<p><a href="https://github.com/OpenFn/language-salesforce/blob/master/src/Adaptor.js#L317-L370"><code>upsertIf(logical, 'obj_name', 'externalID', fields())</code></a></p>
+<p><a href="https://github.com/OpenFn/language-salesforce/blob/master/src/Adaptor.js#L372-L398"><code>update('obj_name', fields())</code></a></p>
 <h2>Development</h2>
+<hr>
 <p>Clone the repo, run <code>npm install</code>.</p>
 <p>Run tests using <code>npm run test</code> or <code>npm run test:watch</code></p>
 <p>Build the project using <code>make</code>.</p>
-<p>To build the docs for this repo, run <code>./node_modules/.bin/jsdoc --readme ./README.md ./lib -d docs</code>.</p>
-<h2>Other</h2>
+<p>To build the docs for this repo, run
+<code>./node_modules/.bin/jsdoc --readme ./README.md ./lib -d docs</code>.</p>
+<h2>## Other</h2>
 <p>Create SOAP session</p>
 <pre class="prettyprint source lang-sh"><code>curl https://test.salesforce.com/services/Soap/u/47.0 -H &quot;Content-Type: text/xml; charset=UTF-8&quot; -H &quot;SOAPAction: login&quot; -d @tmp/login.txt | xmllint --format -
 </code></pre>
@@ -109,13 +109,13 @@ https://openfn.my.salesforce.com/services/async/47.0/job/some_id -H 'X-SFDC-Sess
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Adaptor.html">Adaptor</a></li><li><a href="module-FakeAdaptor.html">FakeAdaptor</a></li></ul><h3>Classes</h3><ul><li><a href="module-Adaptor.bulk.html">bulk</a></li><li><a href="module-Adaptor.create.html">create</a></li><li><a href="module-Adaptor.createIf.html">createIf</a></li><li><a href="module-Adaptor.describe.html">describe</a></li><li><a href="module-Adaptor.query.html">query</a></li><li><a href="module-Adaptor.retrieve.html">retrieve</a></li><li><a href="module-Adaptor.update.html">update</a></li><li><a href="module-Adaptor.upsert.html">upsert</a></li><li><a href="module-Adaptor.upsertIf.html">upsertIf</a></li><li><a href="module-Adaptor-describe.html">describe</a></li><li><a href="module-Adaptor-relationship.html">relationship</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Adaptor.html">Adaptor</a></li><li><a href="module-FakeAdaptor.html">FakeAdaptor</a></li></ul><h3>Classes</h3><ul><li><a href="module-Adaptor.bulk.html">bulk</a></li><li><a href="module-Adaptor.create.html">create</a></li><li><a href="module-Adaptor.createIf.html">createIf</a></li><li><a href="module-Adaptor.describe.html">describe</a></li><li><a href="module-Adaptor.destroy.html">destroy</a></li><li><a href="module-Adaptor.query.html">query</a></li><li><a href="module-Adaptor.retrieve.html">retrieve</a></li><li><a href="module-Adaptor.update.html">update</a></li><li><a href="module-Adaptor.upsert.html">upsert</a></li><li><a href="module-Adaptor.upsertIf.html">upsertIf</a></li><li><a href="module-Adaptor-describe.html">describe</a></li><li><a href="module-Adaptor-relationship.html">relationship</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.6</a> on Thu Jun 10 2021 18:38:37 GMT+0000 (Greenwich Mean Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.6</a> on Wed Jan 26 2022 14:00:23 GMT+0000 (Greenwich Mean Time)
 </footer>
 
 <script> prettyPrint(); </script>
