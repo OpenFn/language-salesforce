@@ -228,7 +228,7 @@
           },
           {
             "title": "param",
-            "description": "A callback to execute once the result is fetched",
+            "description": "A callback to execute once query is done",
             "type": {
               "type": "NameExpression",
               "name": "Function"

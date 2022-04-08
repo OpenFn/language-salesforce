@@ -114,7 +114,7 @@ export const retrieve = curry(function (sObject, id, callback, state) {
  * query(`SELECT Id FROM Patient__c WHERE Health_ID__c = '${state.data.field1}'`);
  * @constructor
  * @param {String} qs - A query string.
- * @param {Function} callback - A callback to execute once the result is fetched
+ * @param {Function} callback - A callback to execute once query is done
  * @param {State} state - Runtime state.
  * @returns {Operation}
  */
@@ -180,9 +180,9 @@ export const bulk = curry(function (sObject, operation, options, fun, state) {
           const interval = pollInterval || 6000;
 
           console.info(
-            `Creating bulk ${operation} job for ${sObject}`,
-            chunkedBatch
+            `Creating bulk ${operation} job for ${sObject} with ${chunkedBatch.length} records`
           );
+
           const job = connection.bulk.createJob(sObject, operation, options);
 
           job.on('error', err => reject(err));
