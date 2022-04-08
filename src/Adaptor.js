@@ -16,6 +16,7 @@ import {
   expandReferences,
   field,
   sourceValue,
+  chunk,
 } from '@openfn/language-common';
 import jsforce from 'jsforce';
 import { curry, flatten } from 'lodash-fp';
@@ -113,10 +114,11 @@ export const retrieve = curry(function (sObject, id, callback, state) {
  * query(`SELECT Id FROM Patient__c WHERE Health_ID__c = '${state.data.field1}'`);
  * @constructor
  * @param {String} qs - A query string.
+ * @param {Function} callback - A callback to execute once the result is fetched
  * @param {State} state - Runtime state.
  * @returns {Operation}
  */
-export const query = curry(function (qs, state) {
+export const query = curry(function (qs, callback, state) {
   let { connection } = state;
   qs = expandReferences(qs)(state);
   console.log(`Executing query: ${qs}`);
@@ -126,12 +128,13 @@ export const query = curry(function (qs, state) {
       return console.error(err);
     }
 
-    console.log(result);
+    console.log(
+      'Results retrieved and pushed to position [0] of the references array.'
+    );
 
-    return {
-      ...state,
-      references: [result, ...state.references],
-    };
+    const nextState = { ...state, references: [result, ...state.references] };
+    if (callback) return callback(nextState);
+    return nextState;
   });
 });
 
@@ -157,68 +160,80 @@ export const bulk = curry(function (sObject, operation, options, fun, state) {
   const { failOnError, allowNoOp, pollTimeout, pollInterval } = options;
   const finalAttrs = fun(state);
 
-  return new Promise((resolve, reject) => {
-    if (allowNoOp && finalAttrs.length === 0) {
-      console.info(
-        `No items in ${sObject} array. Skipping bulk ${operation} operation.`
-      );
-      resolve(state);
-      return state;
-    }
+  if (allowNoOp && finalAttrs.length === 0) {
+    console.info(
+      `No items in ${sObject} array. Skipping bulk ${operation} operation.`
+    );
+    return state;
+  }
 
-    const timeout = pollTimeout || 240000;
-    const interval = pollInterval || 6000;
+  if (finalAttrs.length > 10000)
+    console.log('Your batch is bigger than 10,000 records; chunking...');
 
-    console.info(`Creating bulk ${operation} job for ${sObject}`, finalAttrs);
-    const job = connection.bulk.createJob(sObject, operation, options);
+  const chunkedBatches = chunk(finalAttrs, 10000);
 
-    job.on('error', err => reject(err));
+  return Promise.all(
+    chunkedBatches.map(
+      chunkedBatch =>
+        new Promise((resolve, reject) => {
+          const timeout = pollTimeout || 240000;
+          const interval = pollInterval || 6000;
 
-    console.info('Creating batch for job.');
-    var batch = job.createBatch();
+          console.info(
+            `Creating bulk ${operation} job for ${sObject}`,
+            chunkedBatch
+          );
+          const job = connection.bulk.createJob(sObject, operation, options);
 
-    console.info('Executing batch.');
-    batch.execute(finalAttrs);
+          job.on('error', err => reject(err));
 
-    batch.on('error', function (err) {
-      job.close();
-      console.error('Request error:');
-      reject(err);
-    });
+          console.info('Creating batch for job.');
+          var batch = job.createBatch();
 
-    return batch
-      .on('queue', function (batchInfo) {
-        console.info(batchInfo);
-        const batchId = batchInfo.id;
-        var batch = job.batch(batchId);
-        batch.poll(interval, timeout);
-      })
-      .then(res => {
-        job.close();
-        const errors = res
-          .map((r, i) => ({ ...r, position: i + 1 }))
-          .filter(item => {
-            return !item.success;
+          console.info('Executing batch.');
+          batch.execute(chunkedBatch);
+
+          batch.on('error', function (err) {
+            job.close();
+            console.error('Request error:');
+            reject(err);
           });
 
-        errors.forEach(err => {
-          err[`${options.extIdField}`] =
-            finalAttrs[err.position - 1][options.extIdField];
-        });
+          return batch
+            .on('queue', function (batchInfo) {
+              console.info(batchInfo);
+              const batchId = batchInfo.id;
+              var batch = job.batch(batchId);
+              batch.poll(interval, timeout);
+            })
+            .then(res => {
+              job.close();
+              const errors = res
+                .map((r, i) => ({ ...r, position: i + 1 }))
+                .filter(item => {
+                  return !item.success;
+                });
 
-        if (failOnError && errors.length > 0) {
-          console.error('Errors detected:');
+              errors.forEach(err => {
+                err[`${options.extIdField}`] =
+                  chunkedBatch[err.position - 1][options.extIdField];
+              });
 
-          reject(JSON.stringify(errors, null, 2));
-        } else {
-          console.log('Result : ' + JSON.stringify(res, null, 2));
-          resolve({ ...state, references: [res, ...state.references] });
-          return {
-            ...state,
-            references: [res, ...state.references],
-          };
-        }
-      });
+              if (failOnError && errors.length > 0) {
+                console.error('Errors detected:');
+
+                reject(JSON.stringify(errors, null, 2));
+              } else {
+                console.log('Result : ' + JSON.stringify(res, null, 2));
+                resolve(res);
+              }
+            });
+        })
+    )
+  ).then(arrayOfResults => {
+    console.log('Merging results arrays.');
+    const merged = [].concat.apply([], arrayOfResults);
+    return { ...state, references: [merged, ...state.references] };
   });
 });
 
@@ -568,6 +583,7 @@ export {
   arrayToString,
   beta,
   combine,
+  chunk,
   dataPath,
   dataValue,
   dateFns,
