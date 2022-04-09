@@ -196,7 +196,6 @@
       "name": "query",
       "params": [
         "qs",
-        "callback",
         "state"
       ],
       "docs": {
@@ -225,15 +224,6 @@
               "name": "String"
             },
             "name": "qs"
-          },
-          {
-            "title": "param",
-            "description": "A callback to execute once query is done",
-            "type": {
-              "type": "NameExpression",
-              "name": "Function"
-            },
-            "name": "callback"
           },
           {
             "title": "param",

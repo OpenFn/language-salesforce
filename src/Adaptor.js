@@ -114,11 +114,10 @@ export const retrieve = curry(function (sObject, id, callback, state) {
  * query(`SELECT Id FROM Patient__c WHERE Health_ID__c = '${state.data.field1}'`);
  * @constructor
  * @param {String} qs - A query string.
- * @param {Function} callback - A callback to execute once query is done
  * @param {State} state - Runtime state.
  * @returns {Operation}
  */
-export const query = curry(function (qs, callback, state) {
+export const query = curry(function (qs, state) {
   let { connection } = state;
   qs = expandReferences(qs)(state);
   console.log(`Executing query: ${qs}`);
@@ -132,9 +131,10 @@ export const query = curry(function (qs, callback, state) {
       'Results retrieved and pushed to position [0] of the references array.'
     );
 
-    const nextState = { ...state, references: [result, ...state.references] };
-    if (callback) return callback(nextState);
-    return nextState;
+    return {
+      ...state,
+      references: [result, ...state.references],
+    };
   });
 });
 
