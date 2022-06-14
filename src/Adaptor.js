@@ -596,6 +596,7 @@ export {
   humanProper,
   index,
   join,
+  jsonValue,
   lastReferenceValue,
   map,
   merge,
