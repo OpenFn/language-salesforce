@@ -139,6 +139,38 @@ export const query = curry(function (qs, state) {
 });
 
 /**
+ * Execute an SOQL query and return result object.
+ * Note that in an event of a query error,
+ * error logs will be printed but the operation will not throw the error.
+ * @public
+ * @example
+ * directQuery(`SELECT Id FROM Patient__c WHERE Health_ID__c = '${state.data.field1}'`);
+ * @constructor
+ * @param {String} qs - A query string.
+ * @param {State} state - Runtime state.
+ * @returns {Operation}
+ */
+export const directQuery = curry(function (qs, state) {
+  let { connection } = state;
+  qs = expandReferences(qs)(state);
+  console.log(`Executing query: ${qs}`);
+
+  return connection.query(qs, function (err, result) {
+    if (err) {
+      return console.error(err);
+    }
+
+    console.log(
+      'Results retrieved.'
+    );
+
+    return {
+      result
+    };
+  });
+});
+
+/**
  * Create and execute a bulk job.
  * @public
  * @example
