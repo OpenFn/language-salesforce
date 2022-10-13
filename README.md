@@ -8,6 +8,17 @@ http://openfn.github.io/language-salesforce/ **
 See [releases](https://github.com/OpenFn/language-salesforce/releases) for all
 changes.
 
+## Sample configuration
+
+```json
+{
+  "loginUrl": "https://somesalesforcelogin.url/",
+  "username": "someusername",
+  "password": "somesupersecretpassword",
+  "securityToken": "salesforcesecuritytoken"
+}
+```
+
 ## Intent
 
 ---
